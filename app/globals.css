@@ -1,26 +1,114 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Brand */
+  --color-ink: #0a0a0a;
+  --color-ink-soft: #171814;
+  --color-white: #ffffff;
+  --color-lime: #2fb201;
+  --color-lime-deep: #248900;
+  --color-lime-soft: #e2f7d8;
+  --color-lime-ink: #1e7a00; /* AA-safe brand-green for text on light backgrounds */
+
+  /* Neutrals */
+  --color-surface: #f7f8f5;
+  --color-surface-alt: #f1f2ec;
+  --color-muted: #5c5f58;
+  --color-muted-2: #8a8d84;
+  --color-border: #e6e7e0;
+  --color-border-strong: #d4d6cc;
+
+  /* Semantic (dashboard/forms only — kept subordinate to the brand triad) */
+  --color-success: #1f7a45;
+  --color-success-soft: #e6f4ea;
+  --color-error: #c2402f;
+  --color-error-soft: #fbeae7;
+  --color-warning: #a06a00;
+  --color-warning-soft: #fbf1dc;
+
+  /* Elevation */
+  --shadow-card: 0 1px 2px rgba(10, 10, 10, 0.04), 0 12px 32px -20px rgba(10, 10, 10, 0.18);
+  --shadow-lift: 0 2px 4px rgba(10, 10, 10, 0.06), 0 24px 48px -20px rgba(10, 10, 10, 0.28);
+
+  --background: var(--color-white);
+  --foreground: var(--color-ink);
 }
 
 @theme inline {
+  --color-ink: var(--color-ink);
+  --color-ink-soft: var(--color-ink-soft);
+  --color-white: var(--color-white);
+  --color-lime: var(--color-lime);
+  --color-lime-deep: var(--color-lime-deep);
+  --color-lime-soft: var(--color-lime-soft);
+  --color-lime-ink: var(--color-lime-ink);
+
+  --color-surface: var(--color-surface);
+  --color-surface-alt: var(--color-surface-alt);
+  --color-muted: var(--color-muted);
+  --color-muted-2: var(--color-muted-2);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+
+  --color-success: var(--color-success);
+  --color-success-soft: var(--color-success-soft);
+  --color-error: var(--color-error);
+  --color-error-soft: var(--color-error-soft);
+  --color-warning: var(--color-warning);
+  --color-warning-soft: var(--color-warning-soft);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+  --font-sans: var(--font-plus-jakarta);
+
+  --shadow-card: var(--shadow-card);
+  --shadow-lift: var(--shadow-lift);
+
+  --container-8xl: 90rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 32s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
