@@ -8,12 +8,24 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { SessionCard } from "@/components/dashboard/SessionCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
+import { SkeletonStatCards, SkeletonSessionList } from "@/components/dashboard/DashboardSkeletons";
 
 export default function MentorDashboardPage() {
   const { session } = useSession();
   const { data, updateSessionStatus, rescheduleSession } = useMentorData();
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="flex flex-col gap-8">
+        <PageHeader title={`Welcome back, ${session?.name.split(" ")[0] ?? ""}`} description="Here's what's happening with your students today." />
+        <SkeletonStatCards count={4} />
+        <div className="flex flex-col gap-4">
+          <h2 className="text-lg font-semibold text-ink">Upcoming sessions</h2>
+          <SkeletonSessionList count={2} />
+        </div>
+      </div>
+    );
+  }
 
   const upcoming = data.sessions.filter((s) => s.status === "upcoming").sort((a, b) => a.date.localeCompare(b.date));
   const completed = data.sessions.filter((s) => s.status === "completed");

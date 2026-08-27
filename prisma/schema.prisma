@@ -1,6 +1,8 @@
-// Remedial One — core schema, Phase 2: Auth + RBAC + user profiles.
-// Booking/video/CMS/payments models are added in later phases per the
-// project's phased implementation order — do not add them here speculatively.
+// Remedial One — core schema.
+// Phase 2: Auth + RBAC + user profiles.
+// Phase 4: Subjects, grades, mentor discovery, availability, booking.
+// Video/CMS/payments models are added in later phases per the project's
+// phased implementation order — do not add them here speculatively.
 
 generator client {
   provider = "prisma-client"
@@ -47,6 +49,14 @@ enum ParentLinkStatus {
   PENDING
   APPROVED
   REVOKED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
 }
 
 // ---------------------------------------------------------------------------
@@ -192,6 +202,7 @@ model StudentProfile {
   updatedAt          DateTime @updatedAt
 
   parentLinks ParentChildLink[]
+  bookings    Booking[]
 }
 
 model MentorProfile {
@@ -202,8 +213,6 @@ model MentorProfile {
   bio             String?
   qualifications  String?
   teachingStyle   String?
-  subjectsTaught  String[]                @default([])
-  classesTaught   String[]                @default([])
   languages       String[]                @default([])
   hourlyRate      Decimal?                @db.Decimal(10, 2)
   currency        String                  @default("USD")
@@ -213,6 +222,11 @@ model MentorProfile {
   rejectionReason String?
   createdAt       DateTime                @default(now())
   updatedAt       DateTime                @updatedAt
+
+  subjects     Subject[]
+  grades       Grade[]
+  availability MentorAvailability[]
+  bookings     Booking[]
 
   @@index([status])
 }
@@ -249,6 +263,88 @@ model ParentChildLink {
 
   @@unique([parentId, studentId])
   @@index([studentId])
+}
+
+// ---------------------------------------------------------------------------
+// Subjects, grades, mentor discovery, availability, booking
+// ---------------------------------------------------------------------------
+
+// Seeded from the existing marketing copy in lib/content/subjects.ts (see
+// prisma/seed.ts). The marketing site still reads that static file directly
+// for now — this table exists so mentors/bookings can reference a real
+// subjectId. Admin-editable CMS management of this content is Phase 9.
+model Subject {
+  id               String   @id @default(cuid())
+  slug             String   @unique
+  name             String
+  shortDescription String
+  icon             String
+  isPublished      Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  grades   Grade[]
+  mentors  MentorProfile[]
+  bookings Booking[]
+
+  @@index([isPublished])
+}
+
+// Seeded from lib/content/classes.ts — see the Subject comment above.
+model Grade {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  range     String
+  tagline   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subjects Subject[]
+  mentors  MentorProfile[]
+}
+
+// Recurring weekly availability. dayOfWeek follows JS Date#getDay (0 = Sunday
+// .. 6 = Saturday) so it lines up with any Date-based scheduling logic.
+model MentorAvailability {
+  id        String        @id @default(cuid())
+  mentorId  String
+  mentor    MentorProfile @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+  dayOfWeek Int
+  startHour Int
+  endHour   Int
+
+  @@index([mentorId])
+}
+
+model Booking {
+  id              String         @id @default(cuid())
+  studentId       String
+  student         StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  mentorId        String
+  mentor          MentorProfile  @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+  subjectId       String
+  subject         Subject        @relation(fields: [subjectId], references: [id])
+  gradeLabel      String?
+  scheduledAt     DateTime
+  durationMinutes Int            @default(60)
+  status          BookingStatus  @default(CONFIRMED)
+  studentNotes    String?
+  cancelledById   String?
+  cancelReason    String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  // Double-booking guard: a partial unique index on (mentorId, scheduledAt)
+  // WHERE status IN ('PENDING','CONFIRMED') is created directly in
+  // migration.sql (Prisma's schema DSL can't express partial indexes) — a
+  // cancelled booking must free up its slot, so a plain @@unique here would
+  // be wrong. See prisma/migrations/20260827110000_booking_active_slot_unique.
+  // Overlap from mismatched durations is additionally checked in the service
+  // layer (see app/api/bookings/route.ts).
+  @@index([studentId])
+  @@index([mentorId])
+  @@index([scheduledAt])
 }
 
 // ---------------------------------------------------------------------------

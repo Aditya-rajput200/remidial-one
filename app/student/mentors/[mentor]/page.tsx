@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState, use } from "react";
 import { notFound } from "next/navigation";
 import { UserRound, MessageSquare, CalendarPlus } from "lucide-react";
 import { useStudentData } from "@/lib/data/useStudentData";
@@ -8,30 +9,68 @@ import { SessionCard } from "@/components/dashboard/SessionCard";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { DEMO_MENTOR } from "@/lib/data/types";
-import { use } from "react";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { SkeletonDetailHeader, SkeletonSessionList } from "@/components/dashboard/DashboardSkeletons";
+
+type MentorDetail = {
+  id: string;
+  name: string;
+  bio: string;
+  qualifications: string;
+  teachingStyle: string;
+  subjects: { slug: string; name: string }[];
+  grades: { slug: string; name: string }[];
+  yearsExperience: number | null;
+};
 
 export default function StudentMentorDetailPage(props: PageProps<"/student/mentors/[mentor]">) {
-  const { mentor } = use(props.params);
+  const { mentor: mentorId } = use(props.params);
   const { data, updateSessionStatus, rescheduleSession } = useStudentData();
+  const [mentor, setMentor] = useState<MentorDetail | null | undefined>(undefined);
 
-  if (mentor !== DEMO_MENTOR.id) notFound();
-  if (!data) return null;
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/mentors/${mentorId}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body) => {
+        if (!cancelled) setMentor(body?.mentor ?? null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [mentorId]);
 
-  const history = data.sessions.filter((s) => s.counterpartId === mentor);
+  if (mentor === null) notFound();
+  if (!data || mentor === undefined) {
+    return (
+      <div className="flex flex-col gap-8">
+        <div className="mb-6 flex flex-col gap-2 sm:mb-8">
+          <Skeleton className="h-8 w-56" />
+          <Skeleton className="h-4 w-40" />
+        </div>
+        <SkeletonDetailHeader />
+        <div className="flex flex-col gap-4">
+          <h2 className="text-lg font-semibold text-ink">Session history</h2>
+          <SkeletonSessionList count={2} />
+        </div>
+      </div>
+    );
+  }
+
+  const history = data.sessions.filter((s) => s.counterpartId === mentorId);
 
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
-        title={DEMO_MENTOR.name}
-        description={DEMO_MENTOR.role}
+        title={mentor.name}
+        description={mentor.subjects.map((s) => s.name).join(", ") || "Mentor"}
         action={
           <div className="flex gap-2">
             <Button href="/student/messages" variant="secondary-outline" size="sm" className="gap-1.5">
               <MessageSquare className="h-4 w-4" aria-hidden />
               Message
             </Button>
-            <Button href={`/book/${DEMO_MENTOR.id}`} variant="primary-lime" size="sm" className="gap-1.5">
+            <Button href={`/book/${mentorId}`} variant="primary-lime" size="sm" className="gap-1.5">
               <CalendarPlus className="h-4 w-4" aria-hidden />
               Book a Session
             </Button>
@@ -44,11 +83,17 @@ export default function StudentMentorDetailPage(props: PageProps<"/student/mento
           <UserRound className="h-8 w-8" strokeWidth={1.5} aria-hidden />
         </div>
         <div className="flex flex-col gap-2">
-          <Badge tone="outline">Demo profile</Badge>
-          <p className="text-sm leading-relaxed text-muted">
-            This is a demo mentor used to preview the platform experience — booking, messaging, and
-            session history all work against this sample profile.
-          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {mentor.grades.map((g) => (
+              <Badge key={g.slug} tone="outline">
+                {g.name}
+              </Badge>
+            ))}
+          </div>
+          {mentor.bio ? <p className="text-sm leading-relaxed text-muted">{mentor.bio}</p> : null}
+          {mentor.qualifications ? (
+            <p className="text-xs text-muted-2">{mentor.qualifications}</p>
+          ) : null}
         </div>
       </div>
 
@@ -71,7 +116,7 @@ export default function StudentMentorDetailPage(props: PageProps<"/student/mento
             title="No sessions yet"
             description="Book your first session with this mentor to get started."
             action={
-              <Button href={`/book/${DEMO_MENTOR.id}`} variant="primary-black">
+              <Button href={`/book/${mentorId}`} variant="primary-black">
                 Book a Session
               </Button>
             }

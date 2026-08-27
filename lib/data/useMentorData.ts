@@ -4,20 +4,23 @@ import { useCallback, useEffect, useState } from "react";
 import { useSession } from "@/lib/auth/SessionProvider";
 import { loadMentorData, saveMentorData } from "@/lib/data/store";
 import { seedMentorData } from "@/lib/data/seed";
-import type {
-  AvailabilitySlot,
-  DashboardSession,
-  MentorData,
-  MentorProfile,
-  Message,
-  Resource,
-} from "@/lib/data/types";
+import {
+  bookingToSession,
+  cancelBooking,
+  completeBooking,
+  fetchBookings,
+  rescheduleBooking,
+  updateBookingNotes,
+} from "@/lib/data/bookingAdapter";
+import type { AvailabilitySlot, MentorData, MentorProfile, Message, Resource } from "@/lib/data/types";
 
-// Profile fields are backed by the real database (see app/api/mentors/me).
-// Sessions/messages/resources/availability are still demo data seeded into
-// localStorage until bookings/messaging/resources have real models
-// (Phases 4-6) — this hook stitches the two together so dashboard UI built
-// against MentorData keeps working unchanged.
+const DAY_NAMES: AvailabilitySlot["day"][] = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+// Profile, availability, and sessions are backed by the real database (see
+// app/api/mentors/me, app/api/mentors/me/availability, app/api/bookings).
+// Messages/resources are still demo data seeded into localStorage until they
+// have real models (Phase 6) — this hook stitches the two together so
+// dashboard UI built against MentorData keeps working unchanged.
 async function fetchProfile(): Promise<MentorProfile | null> {
   const response = await fetch("/api/mentors/me");
   if (!response.ok) return null;
@@ -25,22 +28,46 @@ async function fetchProfile(): Promise<MentorProfile | null> {
   return { ...body.profile, languages: (body.profile.languages as string[]).join(", ") };
 }
 
+async function fetchAvailability(): Promise<AvailabilitySlot[]> {
+  const response = await fetch("/api/mentors/me/availability");
+  if (!response.ok) return [];
+  const body = await response.json();
+  return (body.slots as { dayOfWeek: number; startHour: number; endHour: number }[]).map((s) => ({
+    day: DAY_NAMES[s.dayOfWeek],
+    startHour: s.startHour,
+    endHour: s.endHour,
+  }));
+}
+
 export function useMentorData() {
   const { session } = useSession();
   const [data, setData] = useState<MentorData | null>(null);
+
+  const refetchSessions = useCallback(async () => {
+    const bookings = await fetchBookings();
+    const sessions = bookings.map((b) => bookingToSession(b, "mentor"));
+    setData((prev) => (prev ? { ...prev, sessions } : prev));
+  }, []);
 
   useEffect(() => {
     if (!session || session.role !== "mentor") return;
     let cancelled = false;
 
     (async () => {
-      const existing = loadMentorData();
-      const base = existing ?? seedMentorData(session);
-      const profile = await fetchProfile();
+      const base = loadMentorData() ?? seedMentorData(session);
+      const [profile, availability, bookings] = await Promise.all([
+        fetchProfile(),
+        fetchAvailability(),
+        fetchBookings(),
+      ]);
       if (cancelled) return;
 
-      const merged: MentorData = profile ? { ...base, profile } : base;
-      if (!existing) saveMentorData(merged);
+      const merged: MentorData = {
+        ...base,
+        ...(profile ? { profile } : {}),
+        availability,
+        sessions: bookings.map((b) => bookingToSession(b, "mentor")),
+      };
       setData(merged);
     })();
 
@@ -59,31 +86,28 @@ export function useMentorData() {
   }, []);
 
   const updateSessionStatus = useCallback(
-    (id: string, status: DashboardSession["status"]) => {
-      update((prev) => ({
-        ...prev,
-        sessions: prev.sessions.map((s) => (s.id === id ? { ...s, status } : s)),
-      }));
+    async (id: string, status: "cancelled" | "completed") => {
+      const ok = status === "cancelled" ? await cancelBooking(id) : await completeBooking(id);
+      if (ok) await refetchSessions();
+      return ok;
     },
-    [update]
+    [refetchSessions]
   );
 
   const rescheduleSession = useCallback(
-    (id: string, date: string) => {
-      update((prev) => ({
-        ...prev,
-        sessions: prev.sessions.map((s) => (s.id === id ? { ...s, date, status: "upcoming" } : s)),
-      }));
+    async (id: string, date: string) => {
+      const ok = await rescheduleBooking(id, date);
+      if (ok) await refetchSessions();
+      return ok;
     },
-    [update]
+    [refetchSessions]
   );
 
   const updateSessionNotes = useCallback(
-    (id: string, notes: string) => {
-      update((prev) => ({
-        ...prev,
-        sessions: prev.sessions.map((s) => (s.id === id ? { ...s, notes } : s)),
-      }));
+    async (id: string, notes: string) => {
+      const ok = await updateBookingNotes(id, notes);
+      if (ok) update((prev) => ({ ...prev, sessions: prev.sessions.map((s) => (s.id === id ? { ...s, notes } : s)) }));
+      return ok;
     },
     [update]
   );
@@ -103,6 +127,8 @@ export function useMentorData() {
         bio: profile.bio,
         qualifications: profile.qualifications,
         teachingStyle: profile.teachingStyle,
+        subjectSlugs: profile.subjects.map((s) => s.slug),
+        gradeSlugs: profile.grades.map((g) => g.slug),
         languages: profile.languages
           .split(",")
           .map((l) => l.trim())
@@ -118,12 +144,22 @@ export function useMentorData() {
     return true;
   }, [update]);
 
-  const updateAvailability = useCallback(
-    (availability: AvailabilitySlot[]) => {
-      update((prev) => ({ ...prev, availability }));
-    },
-    [update]
-  );
+  const updateAvailability = useCallback(async (availability: AvailabilitySlot[]) => {
+    const response = await fetch("/api/mentors/me/availability", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        slots: availability.map((slot) => ({
+          dayOfWeek: DAY_NAMES.indexOf(slot.day),
+          startHour: slot.startHour,
+          endHour: slot.endHour,
+        })),
+      }),
+    });
+    if (!response.ok) return false;
+    update((prev) => ({ ...prev, availability }));
+    return true;
+  }, [update]);
 
   const addResource = useCallback(
     (resource: Resource) => {
@@ -134,6 +170,7 @@ export function useMentorData() {
 
   return {
     data,
+    refetchSessions,
     updateSessionStatus,
     rescheduleSession,
     updateSessionNotes,

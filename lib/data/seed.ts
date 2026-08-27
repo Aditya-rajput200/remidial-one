@@ -210,8 +210,14 @@ export function seedMentorData(session: AuthSession): MentorData {
       email: session.email,
       bio: "Passionate about helping students build genuine understanding, not just exam scores.",
       qualifications: "M.Sc. Mathematics",
-      subjectsTaught: [math.slug, physics.slug],
-      classesTaught: ["Classes 9–10", "Classes 11–12"],
+      subjects: [
+        { slug: math.slug, name: math.name },
+        { slug: physics.slug, name: physics.name },
+      ],
+      grades: [
+        { slug: "classes-9-10", name: "Classes 9–10" },
+        { slug: "classes-11-12", name: "Classes 11–12" },
+      ],
       languages: "English, Hindi",
       teachingStyle: "Concept-first, example-driven, with regular practice checkpoints.",
     },

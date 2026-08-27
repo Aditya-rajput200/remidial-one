@@ -7,11 +7,29 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/dashboard/ProgressBar";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 export default function StudentLearningPage() {
   const { data } = useStudentData();
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="flex flex-col gap-6">
+        <PageHeader title="My Learning" description="Subjects you're actively learning through 1-to-1 sessions." />
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-6">
+              <Skeleton className="h-5 w-2/3" />
+              <Skeleton className="h-3.5 w-full" />
+              <Skeleton className="h-3.5 w-4/5" />
+              <Skeleton className="h-2 w-full rounded-full" />
+              <Skeleton className="h-4 w-40" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   const subjects = data.profile.subjectsOfInterest
     .map((slug) => ({ slug, subject: getSubjectBySlug(slug) }))

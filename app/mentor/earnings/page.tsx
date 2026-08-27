@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { SkeletonStatCards, SkeletonList } from "@/components/dashboard/DashboardSkeletons";
 
 const DEMO_HOURLY_RATE = 500;
 
@@ -16,7 +17,15 @@ function formatDate(iso: string) {
 export default function MentorEarningsPage() {
   const { data } = useMentorData();
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="flex flex-col gap-6">
+        <PageHeader title="Earnings" description="An estimate of your earnings from completed sessions." />
+        <SkeletonStatCards count={3} />
+        <SkeletonList rows={3} />
+      </div>
+    );
+  }
 
   const completed = data.sessions.filter((s) => s.status === "completed");
   const totalEarnings = completed.reduce((sum, s) => sum + (s.durationMinutes / 60) * DEMO_HOURLY_RATE, 0);

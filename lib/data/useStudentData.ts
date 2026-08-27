@@ -4,13 +4,14 @@ import { useCallback, useEffect, useState } from "react";
 import { useSession } from "@/lib/auth/SessionProvider";
 import { loadStudentData, saveStudentData } from "@/lib/data/store";
 import { seedStudentData } from "@/lib/data/seed";
-import type { DashboardSession, Message, Resource, StudentData, StudentProfile } from "@/lib/data/types";
+import { bookingToSession, cancelBooking, fetchBookings, rescheduleBooking, updateBookingNotes } from "@/lib/data/bookingAdapter";
+import type { Message, Resource, StudentData, StudentProfile } from "@/lib/data/types";
 
-// Profile fields are backed by the real database (see app/api/students/me).
-// Sessions/messages/resources/progress are still demo data seeded into
-// localStorage until bookings/messaging/resources have real models
-// (Phases 4-6) — this hook stitches the two together so dashboard UI built
-// against StudentData keeps working unchanged.
+// Profile and sessions are backed by the real database (see app/api/students/me
+// and app/api/bookings). Messages/resources/progress are still demo data
+// seeded into localStorage until they have real models (Phases 5-6) — this
+// hook stitches the two together so dashboard UI built against StudentData
+// keeps working unchanged.
 async function fetchProfile(): Promise<StudentProfile | null> {
   const response = await fetch("/api/students/me");
   if (!response.ok) return null;
@@ -22,18 +23,26 @@ export function useStudentData() {
   const { session } = useSession();
   const [data, setData] = useState<StudentData | null>(null);
 
+  const refetchSessions = useCallback(async () => {
+    const bookings = await fetchBookings();
+    const sessions = bookings.map((b) => bookingToSession(b, "student"));
+    setData((prev) => (prev ? { ...prev, sessions } : prev));
+  }, []);
+
   useEffect(() => {
     if (!session || session.role !== "student") return;
     let cancelled = false;
 
     (async () => {
-      const existing = loadStudentData();
-      const base = existing ?? seedStudentData(session);
-      const profile = await fetchProfile();
+      const base = loadStudentData() ?? seedStudentData(session);
+      const [profile, bookings] = await Promise.all([fetchProfile(), fetchBookings()]);
       if (cancelled) return;
 
-      const merged: StudentData = profile ? { ...base, profile } : base;
-      if (!existing) saveStudentData(merged);
+      const merged: StudentData = {
+        ...base,
+        ...(profile ? { profile } : {}),
+        sessions: bookings.map((b) => bookingToSession(b, "student")),
+      };
       setData(merged);
     })();
 
@@ -51,39 +60,32 @@ export function useStudentData() {
     });
   }, []);
 
-  const addSession = useCallback(
-    (newSession: DashboardSession) => {
-      update((prev) => ({ ...prev, sessions: [newSession, ...prev.sessions] }));
-    },
-    [update]
-  );
-
   const updateSessionStatus = useCallback(
-    (id: string, status: DashboardSession["status"]) => {
-      update((prev) => ({
-        ...prev,
-        sessions: prev.sessions.map((s) => (s.id === id ? { ...s, status } : s)),
-      }));
+    async (id: string, status: "cancelled" | "completed") => {
+      if (status === "cancelled") {
+        const ok = await cancelBooking(id);
+        if (ok) await refetchSessions();
+        return ok;
+      }
+      return false;
     },
-    [update]
+    [refetchSessions]
   );
 
   const rescheduleSession = useCallback(
-    (id: string, date: string) => {
-      update((prev) => ({
-        ...prev,
-        sessions: prev.sessions.map((s) => (s.id === id ? { ...s, date, status: "upcoming" } : s)),
-      }));
+    async (id: string, date: string) => {
+      const ok = await rescheduleBooking(id, date);
+      if (ok) await refetchSessions();
+      return ok;
     },
-    [update]
+    [refetchSessions]
   );
 
   const updateSessionNotes = useCallback(
-    (id: string, notes: string) => {
-      update((prev) => ({
-        ...prev,
-        sessions: prev.sessions.map((s) => (s.id === id ? { ...s, notes } : s)),
-      }));
+    async (id: string, notes: string) => {
+      const ok = await updateBookingNotes(id, notes);
+      if (ok) update((prev) => ({ ...prev, sessions: prev.sessions.map((s) => (s.id === id ? { ...s, notes } : s)) }));
+      return ok;
     },
     [update]
   );
@@ -121,7 +123,7 @@ export function useStudentData() {
 
   return {
     data,
-    addSession,
+    refetchSessions,
     updateSessionStatus,
     rescheduleSession,
     updateSessionNotes,

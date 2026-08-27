@@ -11,7 +11,7 @@ export type DashboardSession = {
   durationMinutes: number;
   status: SessionStatus;
   notes: string;
-  isDemo: true;
+  isDemo?: true;
 };
 
 export type Message = {
@@ -58,8 +58,8 @@ export type MentorProfile = {
   email: string;
   bio: string;
   qualifications: string;
-  subjectsTaught: string[];
-  classesTaught: string[];
+  subjects: { slug: string; name: string }[];
+  grades: { slug: string; name: string }[];
   languages: string;
   teachingStyle: string;
 };

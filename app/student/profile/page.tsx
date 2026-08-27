@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { classBands } from "@/lib/content/classes";
+import { SkeletonForm } from "@/components/dashboard/DashboardSkeletons";
 
 export default function StudentProfilePage() {
   const { data, updateProfile } = useStudentData();
@@ -30,7 +31,14 @@ export default function StudentProfilePage() {
     }
   }, [data]);
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="flex flex-col gap-6">
+        <PageHeader title="Profile" description="Keep your learning preferences up to date." />
+        <SkeletonForm fields={4} />
+      </div>
+    );
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

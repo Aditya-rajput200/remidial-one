@@ -7,6 +7,7 @@ import { Calendar } from "@/components/dashboard/Calendar";
 import { SessionCard } from "@/components/dashboard/SessionCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CalendarClock } from "lucide-react";
+import { SkeletonCalendar } from "@/components/dashboard/DashboardSkeletons";
 
 function sameDay(a: Date, b: Date) {
   return a.toDateString() === b.toDateString();
@@ -16,7 +17,14 @@ export default function StudentCalendarPage() {
   const { data, updateSessionStatus, rescheduleSession } = useStudentData();
   const [selectedDate, setSelectedDate] = useState(new Date());
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="flex flex-col gap-6">
+        <PageHeader title="Calendar" description="See your sessions laid out by date." />
+        <SkeletonCalendar />
+      </div>
+    );
+  }
 
   const daySessions = data.sessions.filter((s) => sameDay(new Date(s.date), selectedDate));
 

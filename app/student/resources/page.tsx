@@ -5,6 +5,7 @@ import { useStudentData } from "@/lib/data/useStudentData";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { Resource } from "@/lib/data/types";
+import { SkeletonList } from "@/components/dashboard/DashboardSkeletons";
 
 const typeIcon: Record<Resource["type"], typeof FileText> = {
   video: PlayCircle,
@@ -15,7 +16,14 @@ const typeIcon: Record<Resource["type"], typeof FileText> = {
 export default function StudentResourcesPage() {
   const { data } = useStudentData();
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="flex flex-col gap-6">
+        <PageHeader title="Resources" description="Notes, assignments, and materials shared by your mentor." />
+        <SkeletonList rows={4} />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">

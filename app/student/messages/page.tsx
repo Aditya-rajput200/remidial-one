@@ -9,12 +9,20 @@ import { MessageThread } from "@/components/dashboard/MessageThread";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { DEMO_MENTOR } from "@/lib/data/types";
 import type { Message } from "@/lib/data/types";
+import { SkeletonThreads } from "@/components/dashboard/DashboardSkeletons";
 
 export default function StudentMessagesPage() {
   const { data, addMessage } = useStudentData();
   const [activeThreadId, setActiveThreadId] = useState<string>(DEMO_MENTOR.id);
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="flex flex-col gap-6">
+        <PageHeader title="Messages" description="Conversations with your mentors." />
+        <SkeletonThreads />
+      </div>
+    );
+  }
 
   const threadMessages = data.messages
     .filter((m) => m.threadId === activeThreadId)

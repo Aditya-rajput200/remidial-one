@@ -10,12 +10,31 @@ import { SessionCard } from "@/components/dashboard/SessionCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/dashboard/ProgressBar";
+import { SkeletonStatCards, SkeletonSessionList } from "@/components/dashboard/DashboardSkeletons";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 export default function StudentDashboardPage() {
   const { session } = useSession();
   const { data, updateSessionStatus, rescheduleSession } = useStudentData();
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="flex flex-col gap-8">
+        <PageHeader title={`Welcome back, ${session?.name.split(" ")[0] ?? ""}`} description="Here's where your learning stands today." />
+        <SkeletonStatCards count={4} />
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="flex flex-col gap-4 lg:col-span-2">
+            <h2 className="text-lg font-semibold text-ink">Upcoming session</h2>
+            <SkeletonSessionList count={1} />
+          </div>
+          <div className="flex flex-col gap-4">
+            <h2 className="text-lg font-semibold text-ink">Subject progress</h2>
+            <Skeleton className="h-40 rounded-2xl" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const upcoming = data.sessions.filter((s) => s.status === "upcoming").sort((a, b) => a.date.localeCompare(b.date));
   const completedCount = data.sessions.filter((s) => s.status === "completed").length;

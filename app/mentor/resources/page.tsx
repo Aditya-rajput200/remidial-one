@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { FormField } from "@/components/ui/FormField";
 import type { Resource } from "@/lib/data/types";
+import { SkeletonList } from "@/components/dashboard/DashboardSkeletons";
 
 const typeIcon: Record<Resource["type"], typeof FileText> = {
   video: PlayCircle,
@@ -21,7 +22,14 @@ export default function MentorResourcesPage() {
   const { data, addResource } = useMentorData();
   const [showForm, setShowForm] = useState(false);
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="flex flex-col gap-6">
+        <PageHeader title="Resources" description="Notes, assignments, and materials you've shared with students." />
+        <SkeletonList rows={4} />
+      </div>
+    );
+  }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

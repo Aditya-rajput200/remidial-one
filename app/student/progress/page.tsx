@@ -5,11 +5,32 @@ import { useStudentData } from "@/lib/data/useStudentData";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { ProgressBar } from "@/components/dashboard/ProgressBar";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { SkeletonStatCards } from "@/components/dashboard/DashboardSkeletons";
 
 export default function StudentProgressPage() {
   const { data } = useStudentData();
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="flex flex-col gap-6">
+        <PageHeader title="Progress" description="How your learning is building up, subject by subject." />
+        <SkeletonStatCards count={2} />
+        <div className="flex flex-col gap-4">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border border-border bg-white p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3.5 w-20" />
+              </div>
+              <Skeleton className="h-2 w-full rounded-full" />
+              <Skeleton className="mt-4 h-3.5 w-3/4" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   const totalSessions = data.progress.reduce((sum, p) => sum + p.sessionsCompleted, 0);
 

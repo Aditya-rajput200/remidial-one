@@ -33,11 +33,23 @@ async function parseAuthResponse(response: Response): Promise<AuthResult> {
   return { ok: true, session: toClientSession(body.user) };
 }
 
-export function SessionProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [ready, setReady] = useState(false);
+// `initialSession` lets a Server Component ancestor (e.g. app/student/layout.tsx)
+// resolve the session during SSR and seed it here, skipping the client-side
+// /api/auth/me round trip entirely. Pass `null` for "confirmed logged out",
+// or omit the prop for the default lazy client-fetch behavior (used by the
+// root layout, which wraps public marketing pages that don't already know).
+export function SessionProvider({
+  children,
+  initialSession,
+}: {
+  children: ReactNode;
+  initialSession?: Session | null;
+}) {
+  const [session, setSession] = useState<Session | null>(initialSession ?? null);
+  const [ready, setReady] = useState(initialSession !== undefined);
 
   useEffect(() => {
+    if (initialSession !== undefined) return;
     let cancelled = false;
     fetch("/api/auth/me")
       .then((res) => res.json())
@@ -51,7 +63,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialSession]);
 
   const signup = useCallback(async (input: SignupInput): Promise<AuthResult> => {
     const response = await fetch("/api/auth/signup", {

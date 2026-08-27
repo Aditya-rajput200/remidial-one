@@ -11,6 +11,8 @@ import {
   GraduationCap,
   Wallet,
   Settings,
+  ClipboardCheck,
+  ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 
@@ -42,6 +44,22 @@ export const mentorNav: DashboardNavItem[] = [
   { label: "Messages", href: "/mentor/messages", icon: MessageSquare },
   { label: "Earnings", href: "/mentor/earnings", icon: Wallet },
   { label: "Settings", href: "/mentor/settings", icon: Settings },
+];
+
+export const adminNav: DashboardNavItem[] = [
+  { label: "Overview", href: "/admin", icon: LayoutDashboard },
+  { label: "Mentor Applications", href: "/admin/mentor-applications", icon: ClipboardCheck },
+  { label: "Mentors", href: "/admin/mentors", icon: GraduationCap },
+  { label: "Students", href: "/admin/students", icon: UsersRound },
+  { label: "Bookings", href: "/admin/bookings", icon: CalendarClock },
+  { label: "Audit Log", href: "/admin/audit", icon: ShieldCheck },
+];
+
+export const adminBottomNav: DashboardNavItem[] = [
+  adminNav[0],
+  adminNav[1],
+  adminNav[2],
+  adminNav[4],
 ];
 
 // Mobile bottom nav shows a compact subset; the rest live in the drawer.

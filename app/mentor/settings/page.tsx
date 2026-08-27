@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import type { AvailabilitySlot } from "@/lib/data/types";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 const DAYS: AvailabilitySlot["day"][] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const HOURS = Array.from({ length: 14 }, (_, i) => 8 + i); // 8am–9pm
@@ -18,11 +19,21 @@ function isSlotActive(availability: AvailabilitySlot[], day: AvailabilitySlot["d
 export default function MentorSettingsPage() {
   const { data, updateAvailability } = useMentorData();
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
   const [localAvailability, setLocalAvailability] = useState<AvailabilitySlot[] | null>(null);
 
   const availability = localAvailability ?? data?.availability ?? [];
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="flex flex-col gap-6">
+        <PageHeader title="Settings" description="Set your weekly availability for student bookings." />
+        <Skeleton className="h-[420px] w-full rounded-2xl" />
+        <Skeleton className="h-10 w-40 rounded-full" />
+      </div>
+    );
+  }
 
   function toggleSlot(day: AvailabilitySlot["day"], hour: number) {
     const active = isSlotActive(availability, day, hour);
@@ -44,8 +55,15 @@ export default function MentorSettingsPage() {
     setLocalAvailability(next);
   }
 
-  function handleSave() {
-    updateAvailability(availability);
+  async function handleSave() {
+    setSaving(true);
+    setError("");
+    const ok = await updateAvailability(availability);
+    setSaving(false);
+    if (!ok) {
+      setError("Could not save your availability. Please try again.");
+      return;
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   }
@@ -86,8 +104,8 @@ export default function MentorSettingsPage() {
       </div>
 
       <div className="flex items-center gap-3">
-        <Button type="button" variant="primary-lime" size="md" onClick={handleSave}>
-          Save Availability
+        <Button type="button" variant="primary-lime" size="md" onClick={handleSave} disabled={saving}>
+          {saving ? "Saving…" : "Save Availability"}
         </Button>
         {saved ? (
           <span className="inline-flex items-center gap-1.5 text-sm font-medium text-lime-ink">
@@ -95,6 +113,7 @@ export default function MentorSettingsPage() {
             Saved
           </span>
         ) : null}
+        {error ? <span className="text-sm font-medium text-error">{error}</span> : null}
       </div>
     </div>
   );

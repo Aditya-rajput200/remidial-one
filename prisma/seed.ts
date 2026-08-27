@@ -2,6 +2,8 @@ import "dotenv/config";
 import { prisma } from "../lib/db/prisma";
 import { ALL_PERMISSION_KEYS, PERMISSIONS, DEFAULT_ROLE_PERMISSIONS } from "../lib/auth/permissions";
 import { hashPassword } from "../lib/auth/password";
+import { subjects as subjectContent } from "../lib/content/subjects";
+import { classBands } from "../lib/content/classes";
 import type { Role } from "../lib/generated/prisma/enums";
 
 async function seedPermissions() {
@@ -75,10 +77,51 @@ async function seedSuperAdmin() {
   console.log(`Created super admin: ${email} — change this password after first login.`);
 }
 
+// Mirrors lib/content/subjects.ts / lib/content/classes.ts into the database
+// so mentors/bookings can reference a real Subject/Grade id. The marketing
+// site keeps reading the static files directly for now (see the Subject
+// model's doc comment in schema.prisma) — this just keeps the two in sync
+// until CMS management (Phase 9) makes the DB the single source of truth.
+async function seedSubjectsAndGrades() {
+  for (const subject of subjectContent) {
+    await prisma.subject.upsert({
+      where: { slug: subject.slug },
+      update: { name: subject.name, shortDescription: subject.shortDescription, icon: subject.icon },
+      create: {
+        slug: subject.slug,
+        name: subject.name,
+        shortDescription: subject.shortDescription,
+        icon: subject.icon,
+      },
+    });
+  }
+
+  for (const band of classBands) {
+    await prisma.grade.upsert({
+      where: { slug: band.slug },
+      update: {
+        name: band.name,
+        range: band.range,
+        tagline: band.tagline,
+        subjects: { set: band.subjectSlugs.map((slug) => ({ slug })) },
+      },
+      create: {
+        slug: band.slug,
+        name: band.name,
+        range: band.range,
+        tagline: band.tagline,
+        subjects: { connect: band.subjectSlugs.map((slug) => ({ slug })) },
+      },
+    });
+  }
+  console.log(`Seeded ${subjectContent.length} subjects and ${classBands.length} grades.`);
+}
+
 async function main() {
   await seedPermissions();
   await seedRolePermissions();
   await seedSuperAdmin();
+  await seedSubjectsAndGrades();
 }
 
 main()
