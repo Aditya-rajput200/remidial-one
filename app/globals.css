@@ -8,7 +8,12 @@
   --color-lime: #2fb201;
   --color-lime-deep: #248900;
   --color-lime-soft: #e2f7d8;
-  --color-lime-ink: #1e7a00; /* AA-safe brand-green for text on light backgrounds */
+  --color-lime-ink: #c4ee40; /* brand-green for text — button/background greens are untouched */
+
+  /* Deep forest — dark hero/banner treatment, derived from the brand green */
+  --color-forest: #0e2a1a;
+  --color-forest-soft: #a8e0b6;
+  --color-forest-border: #24513a;
 
   /* Neutrals */
   --color-surface: #f7f8f5;
@@ -43,6 +48,10 @@
   --color-lime-soft: var(--color-lime-soft);
   --color-lime-ink: var(--color-lime-ink);
 
+  --color-forest: var(--color-forest);
+  --color-forest-soft: var(--color-forest-soft);
+  --color-forest-border: var(--color-forest-border);
+
   --color-surface: var(--color-surface);
   --color-surface-alt: var(--color-surface-alt);
   --color-muted: var(--color-muted);
@@ -61,6 +70,7 @@
   --color-foreground: var(--foreground);
 
   --font-sans: var(--font-plus-jakarta);
+  --font-serif: var(--font-fraunces);
 
   --shadow-card: var(--shadow-card);
   --shadow-lift: var(--shadow-lift);
@@ -87,6 +97,29 @@
     outline: 2px solid var(--color-ink);
     outline-offset: 2px;
   }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif), Georgia, "Times New Roman", serif;
+  }
+}
+
+.bg-brand-gradient {
+  background-image: radial-gradient(
+    130% 130% at 18% 14%,
+    #b6f23c 0%,
+    #6ede19 22%,
+    #2fb201 55%,
+    #14953b 100%
+  );
+}
+
+.bg-grid-forest {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 34px 34px;
 }
 
 @keyframes marquee {

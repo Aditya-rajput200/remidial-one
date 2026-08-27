@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   ShieldCheck,
   Clock,
@@ -10,11 +11,14 @@ import {
   X as XIcon,
   UsersRound,
   ArrowRight,
+  BarChart3,
 } from "lucide-react";
 import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { Avatar } from "@/components/ui/Avatar";
+import { ImageSlot } from "@/components/ui/ImageSlot";
 import { VideoHero } from "@/components/ui/VideoHero";
 import { SubjectCard } from "@/components/ui/SubjectCard";
 import { SkillCard } from "@/components/ui/SkillCard";
@@ -32,6 +36,7 @@ import { skills } from "@/lib/content/skills";
 import { mentorPreviews } from "@/lib/content/mentors";
 import { generalFaqs } from "@/lib/content/faqs";
 import { buildMetadata } from "@/lib/seo";
+import { publicAsset } from "@/lib/assets";
 
 export const metadata = buildMetadata({
   title: "Remedial One — One Student. One Mentor. One Learning Journey.",
@@ -39,6 +44,13 @@ export const metadata = buildMetadata({
     "Personalized 1-to-1 learning from qualified mentors. Academic subjects, exam preparation, and skills beyond the classroom — paced around how you actually learn.",
   path: "/",
 });
+
+const heroFeatures = [
+  { icon: ShieldCheck, label: "Verified Mentors" },
+  { icon: GraduationCap, label: "1-to-1 Sessions" },
+  { icon: BarChart3, label: "Track Your Progress" },
+  { icon: Globe2, label: "Learn Anytime" },
+];
 
 const trustPoints = [
   { icon: GraduationCap, label: "Qualified Mentors", description: "Every mentor is reviewed before they teach." },
@@ -100,28 +112,219 @@ export default function HomePage() {
   return (
     <>
       {/* Hero */}
-      <Section className="pt-14 pb-16 sm:pt-20 lg:pt-24">
-        <div className="grid gap-12 lg:grid-cols-2 lg:items-center lg:gap-16">
-          <div className="flex flex-col gap-6">
-            <Badge>Personalized 1-to-1 Learning</Badge>
+      <Section tone="surface" className="pt-16 pb-16 sm:pt-20 sm:pb-20 lg:pt-24 lg:pb-24">
+        <div className="grid gap-12 lg:grid-cols-12 lg:items-center lg:gap-8">
+          {/* Text column */}
+          <div className="flex flex-col items-start gap-6 lg:col-span-6">
+            <Badge tone="outline-lime" dot>
+              Personalized 1-to-1 Learning
+            </Badge>
             <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight text-ink sm:text-5xl lg:text-6xl">
-              Learning, Designed Around You.
+              <span className="text-lime-ink">One</span> Student.
+              <br />
+              <span className="text-lime-ink">One</span> Mentor.
+              <br />
+              <span className="text-lime-ink">One</span> Journey.
             </h1>
-            <p className="max-w-lg text-lg leading-relaxed text-muted">
-              Get personalized 1-to-1 learning from qualified mentors who understand your
-              goals, your pace, and the way you learn.
+            <p className="max-w-sm text-base leading-relaxed text-muted">
+              Personalized learning that adapts to you. Learn better. Grow smarter. Achieve more.
             </p>
-            <div className="flex flex-wrap gap-3 pt-2">
-              <Button href="/mentors" variant="primary-lime" size="lg">
+            <div className="flex flex-wrap gap-3 pt-1">
+              <Button href="/mentors" variant="primary-black" size="lg" className="gap-2">
                 Find Your Mentor
+                <ArrowRight className="h-4 w-4" aria-hidden />
               </Button>
-              <Button href="/one-to-one-tuition" variant="secondary-outline" size="lg">
+              <Button href="/one-to-one-tuition" variant="secondary-outline" size="lg" className="gap-2">
                 Explore Learning
+                <ArrowRight className="h-4 w-4" aria-hidden />
               </Button>
             </div>
+
+            <div className="grid grid-cols-4 gap-x-4 gap-y-5 pt-2">
+              {heroFeatures.map((feature) => (
+                <div key={feature.label} className="relative flex flex-col items-start gap-2">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-lime-soft text-lime-ink">
+                    <feature.icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
+                  </div>
+                  <span className="text-xs font-medium leading-tight text-muted">
+                    {feature.label}
+                  </span>
+                  {feature.label === "Track Your Progress" ? (
+                    <Image
+                      src="/images/hero/doted.png"
+                      alt=""
+                      width={1536}
+                      height={1024}
+                      className="pointer-events-none absolute -right-6 -top-5 hidden w-10 rotate-12 sm:block"
+                      aria-hidden
+                    />
+                  ) : null}
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-3 border-t border-border pt-6">
+              <div className="flex -space-x-3">
+                {[1, 2, 3].map((n) => (
+                  <Avatar
+                    key={n}
+                    src={publicAsset(`images/hero/avatar-${n}.jpg`)}
+                    alt="Remedial One student"
+                    size="sm"
+                  />
+                ))}
+              </div>
+              <p className="max-w-[10rem] text-xs leading-snug text-muted">
+                Trusted by students across India and beyond
+              </p>
+            </div>
           </div>
-          <VideoHero />
+
+          {/* Photo column */}
+          <div className="relative flex items-center justify-center lg:col-span-6">
+            {/* Outer, lighter halo circle */}
+            <div
+              className="pointer-events-none absolute inset-0 flex items-center justify-center"
+              aria-hidden
+            >
+              <div className="h-[95%] w-[95%] max-h-[560px] max-w-[560px] rounded-full bg-lime-soft opacity-60" />
+            </div>
+            <div
+              className="pointer-events-none absolute inset-0 flex items-center justify-center"
+              aria-hidden
+            >
+              <div className="h-[85%] w-[85%] max-h-[480px] max-w-[480px] rounded-full border-2 border-dashed border-lime-ink/25" />
+            </div>
+            <div
+              className="pointer-events-none absolute inset-0 flex items-center justify-center"
+              aria-hidden
+            >
+              <Image
+                src="/images/hero/bgRounded.png"
+                alt=""
+                width={900}
+                height={900}
+                className="h-full max-h-[430px] w-auto mix-blend-multiply"
+              />
+            </div>
+
+            <Image
+              src="/images/hero/dots.png"
+              alt=""
+              width={200}
+              height={133}
+              className="pointer-events-none absolute -top-8 -right-4 hidden w-32 opacity-90 sm:block"
+              aria-hidden
+            />
+            <Image
+              src="/images/hero/dots.png"
+              alt=""
+              width={200}
+              height={133}
+              className="pointer-events-none absolute -bottom-6 -left-6 hidden w-28 rotate-180 opacity-80 sm:block"
+              aria-hidden
+            />
+
+            <Image
+              src="/images/hero/bulb.png"
+              alt=""
+              width={1167}
+              height={1347}
+              className="pointer-events-none absolute left-10 -top-6 hidden w-14 sm:block"
+              aria-hidden
+            />
+            <Image
+              src="/images/hero/sixth.png"
+              alt=""
+              width={1536}
+              height={1024}
+              className="pointer-events-none absolute right-4 -top-6 hidden w-24 -rotate-6 sm:block"
+              aria-hidden
+            />
+            <Image
+              src="/images/hero/one.png"
+              alt=""
+              width={1536}
+              height={1024}
+              className="pointer-events-none absolute -left-10 top-16 hidden w-24 -rotate-3 sm:block"
+              aria-hidden
+            />
+            <Image
+              src="/images/hero/fifth.png"
+              alt=""
+              width={416}
+              height={400}
+              className="pointer-events-none absolute -right-10 top-[30%] hidden w-16 rotate-6 sm:block"
+              aria-hidden
+            />
+            <Image
+              src="/images/hero/arrow-cut.png"
+              alt=""
+              width={1536}
+              height={1024}
+              className="pointer-events-none absolute right-20 top-12 hidden w-14 -rotate-12 sm:block"
+              aria-hidden
+            />
+            <Image
+              src="/images/hero/three.png"
+              alt=""
+              width={500}
+              height={220}
+              className="pointer-events-none absolute -left-12 bottom-[30%] hidden w-20 sm:block"
+              aria-hidden
+            />
+            <Image
+              src="/images/hero/two.png"
+              alt=""
+              width={1536}
+              height={1024}
+              className="pointer-events-none absolute -left-4 bottom-10 hidden w-24 rotate-2 sm:block"
+              aria-hidden
+            />
+            <Image
+              src="/images/hero/four.png"
+              alt=""
+              width={1536}
+              height={1024}
+              className="pointer-events-none absolute bottom-6 -right-8 hidden w-20 sm:block"
+              aria-hidden
+            />
+            <Image
+              src="/images/hero/doted.png"
+              alt=""
+              width={1536}
+              height={1024}
+              className="pointer-events-none absolute bottom-24 right-20 hidden w-14 -rotate-6 sm:block"
+              aria-hidden
+            />
+
+            <div className="relative w-full max-w-sm sm:max-w-md">
+              <Image
+                src="/images/hero/lowerelements.png"
+                alt=""
+                width={2038}
+                height={772}
+                className="pointer-events-none absolute bottom-0 left-1/2 h-auto w-[140%] max-w-none -translate-x-1/2"
+                aria-hidden
+              />
+              <ImageSlot
+                src={publicAsset("images/hero/student.png")}
+                alt="Student learning with Remedial One"
+                label="Add student.png"
+                recommendedSize="~1000×1300, transparent PNG"
+                fit="contain"
+                className="relative aspect-[1224/1285] w-full"
+              />
+            </div>
+          </div>
         </div>
+      </Section>
+
+      {/* Video — full width, directly below the hero */}
+      <Section className="pt-0 pb-14 sm:pb-16">
+        <ScrollReveal>
+          <VideoHero className="shadow-lift" />
+        </ScrollReveal>
       </Section>
 
       {/* Trust / value proposition */}
@@ -307,7 +510,7 @@ export default function HomePage() {
           <span className="inline-flex items-center gap-1.5 rounded-full bg-ink px-3 py-1 text-xs font-semibold uppercase tracking-wide text-lime">
             Start Today
           </span>
-          <h2 className="max-w-xl text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+          <h2 className="max-w-xl text-3xl font-semibold tracking-tight text-white sm:text-4xl">
             You&apos;re one mentor away from your next milestone.
           </h2>
           <Button href="/mentors" variant="primary-black" size="lg" className="gap-2">

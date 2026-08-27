@@ -28,5 +28,6 @@ export function AuthShell({
         <div className="w-full max-w-sm">{children}</div>
       </div>
     </div>
+    
   );
 }

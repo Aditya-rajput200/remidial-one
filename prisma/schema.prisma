@@ -1,0 +1,275 @@
+// Remedial One — core schema, Phase 2: Auth + RBAC + user profiles.
+// Booking/video/CMS/payments models are added in later phases per the
+// project's phased implementation order — do not add them here speculatively.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Role {
+  STUDENT
+  MENTOR
+  PARENT
+  ADMIN
+  SUPER_ADMIN
+  CONTENT_MANAGER
+  SUPPORT_AGENT
+  FINANCE_MANAGER
+  MODERATOR
+}
+
+enum AccountStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  DISABLED
+}
+
+enum MentorApplicationStatus {
+  APPLICATION
+  UNDER_REVIEW
+  VERIFIED
+  ACTIVE
+  SUSPENDED
+  REJECTED
+}
+
+enum ParentLinkStatus {
+  PENDING
+  APPROVED
+  REVOKED
+}
+
+// ---------------------------------------------------------------------------
+// Core identity
+// ---------------------------------------------------------------------------
+
+model User {
+  id              String        @id @default(cuid())
+  email           String        @unique
+  passwordHash    String
+  role            Role
+  status          AccountStatus @default(PENDING_VERIFICATION)
+  emailVerifiedAt DateTime?
+  name            String
+  timezone        String        @default("UTC")
+  locale          String        @default("en")
+  country         String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  studentProfile StudentProfile?
+  mentorProfile  MentorProfile?
+  parentProfile  ParentProfile?
+  adminProfile   AdminProfile?
+
+  sessions        Session[]
+  emailTokens     EmailVerificationToken[]
+  resetTokens     PasswordResetToken[]
+  userPermissions UserPermission[]
+
+  auditLogsAsActor AuditLog[] @relation("AuditLogActor")
+
+  @@index([role])
+  @@index([status])
+}
+
+// Server-side session record. The raw session token is only ever held by the
+// client (httpOnly cookie) — we store a SHA-256 hash so a DB leak can't be
+// replayed as a live session.
+model Session {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique
+  userAgent  String?
+  ip         String?
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime  @default(now())
+  expiresAt  DateTime
+  revokedAt  DateTime?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// Role-based access control
+// ---------------------------------------------------------------------------
+
+// Canonical list of fine-grained permission keys (e.g. "students.read").
+// Seeded by prisma/seed.ts — see lib/auth/permissions.ts for the source list.
+model Permission {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  description String
+  createdAt   DateTime @default(now())
+
+  rolePermissions RolePermission[]
+  userPermissions UserPermission[]
+}
+
+// Default permission grants per role.
+model RolePermission {
+  id           String     @id @default(cuid())
+  role         Role
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([role, permissionId])
+  @@index([role])
+}
+
+// Per-user overrides on top of the role defaults (grant or explicitly revoke).
+// Used sparingly — e.g. a SUPPORT_AGENT temporarily granted payments.refund.
+model UserPermission {
+  id           String           @id @default(cuid())
+  userId       String
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permissionId String
+  permission   Permission       @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  effect       PermissionEffect @default(GRANT)
+  grantedById  String?
+  reason       String?
+  createdAt    DateTime         @default(now())
+
+  @@unique([userId, permissionId])
+  @@index([userId])
+}
+
+enum PermissionEffect {
+  GRANT
+  REVOKE
+}
+
+// ---------------------------------------------------------------------------
+// Role profiles
+// ---------------------------------------------------------------------------
+
+model StudentProfile {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grade              String?
+  curriculum         String?
+  subjectsOfInterest String[] @default([])
+  learningGoals      String?
+  preferredTime      String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  parentLinks ParentChildLink[]
+}
+
+model MentorProfile {
+  id              String                  @id @default(cuid())
+  userId          String                  @unique
+  user            User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status          MentorApplicationStatus @default(APPLICATION)
+  bio             String?
+  qualifications  String?
+  teachingStyle   String?
+  subjectsTaught  String[]                @default([])
+  classesTaught   String[]                @default([])
+  languages       String[]                @default([])
+  hourlyRate      Decimal?                @db.Decimal(10, 2)
+  currency        String                  @default("USD")
+  yearsExperience Int?
+  reviewedById    String?
+  reviewedAt      DateTime?
+  rejectionReason String?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  @@index([status])
+}
+
+model ParentProfile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  children ParentChildLink[]
+}
+
+model AdminProfile {
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title              String?
+  twoFactorSecret    String?
+  twoFactorEnabledAt DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+model ParentChildLink {
+  id        String           @id @default(cuid())
+  parentId  String
+  parent    ParentProfile    @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  studentId String
+  student   StudentProfile   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  status    ParentLinkStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+
+  @@unique([parentId, studentId])
+  @@index([studentId])
+}
+
+// ---------------------------------------------------------------------------
+// Audit trail — every sensitive admin/system action writes one of these.
+// Never write passwords, tokens, secrets, or full payment details into
+// `metadata`.
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  actorId      String?
+  actor        User?    @relation("AuditLogActor", fields: [actorId], references: [id], onDelete: SetNull)
+  action       String
+  resourceType String
+  resourceId   String?
+  metadata     Json?
+  ip           String?
+  createdAt    DateTime @default(now())
+
+  @@index([actorId])
+  @@index([resourceType, resourceId])
+  @@index([action])
+  @@index([createdAt])
+}

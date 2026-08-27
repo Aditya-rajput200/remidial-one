@@ -40,7 +40,7 @@ export function VideoHero({
           type="button"
           onClick={() => (src ? setPlaying(true) : setNotice(true))}
           aria-label="Play video"
-          className="flex h-16 w-16 items-center justify-center rounded-full bg-lime text-ink transition-transform duration-200 hover:scale-105 sm:h-20 sm:w-20"
+          className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-gradient text-white transition-transform duration-200 hover:scale-105 sm:h-20 sm:w-20"
         >
           <Play className="h-7 w-7 translate-x-0.5 sm:h-8 sm:w-8" fill="currentColor" aria-hidden />
         </button>

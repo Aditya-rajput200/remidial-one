@@ -2,16 +2,19 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Menu } from "lucide-react";
+import { Menu, LayoutDashboard } from "lucide-react";
 import { primaryNav } from "@/lib/content/nav";
 import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/layout/Logo";
 import { MobileNav } from "@/components/layout/MobileNav";
+import { useSession } from "@/lib/auth/SessionProvider";
 import { cn } from "@/lib/cn";
 
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { session } = useSession();
+  const dashboardHref = session?.role === "mentor" ? "/mentor/dashboard" : "/student/dashboard";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -52,12 +55,21 @@ export function Header() {
             >
               Become a Mentor
             </Link>
-            <Button href="/login" variant="ghost" size="sm">
-              Login
-            </Button>
-            <Button href="/signup" variant="primary-lime" size="sm">
-              Get Started
-            </Button>
+            {session ? (
+              <Button href={dashboardHref} variant="primary-lime" size="sm" className="gap-1.5">
+                <LayoutDashboard className="h-4 w-4" aria-hidden />
+                Dashboard
+              </Button>
+            ) : (
+              <>
+                <Button href="/login" variant="ghost" size="sm">
+                  Login
+                </Button>
+                <Button href="/signup" variant="primary-lime" size="sm">
+                  Get Started
+                </Button>
+              </>
+            )}
           </div>
 
           <button

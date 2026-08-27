@@ -1,5 +1,16 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Database & auth setup
+
+This project uses Prisma + PostgreSQL for real accounts/sessions/RBAC (see `prisma/schema.prisma`).
+
+1. Copy `.env.example` to `.env` and set `DATABASE_URL`. For local dev without a hosted database, run `npx prisma dev` in a separate terminal — it starts a local Postgres and prints a `DATABASE_URL` you can paste in. For production, use your Neon/Supabase connection string.
+2. Apply the schema: `npm run prisma:migrate` (dev) or `npm run prisma:deploy` (prod, no prompts).
+3. Seed permissions/roles and bootstrap the first Super Admin: set `SEED_SUPER_ADMIN_EMAIL` / `SEED_SUPER_ADMIN_PASSWORD` in `.env`, then `npm run db:seed`. Public signup can only create STUDENT/MENTOR/PARENT accounts — this is the only way to create an ADMIN/SUPER_ADMIN account.
+4. `npm run dev` as usual.
+
+Re-run `npm run db:seed` any time `lib/auth/permissions.ts` changes — it keeps `RolePermission` in sync with that file.
+
 ## Getting Started
 
 First, run the development server:

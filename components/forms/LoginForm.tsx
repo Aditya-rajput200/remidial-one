@@ -2,17 +2,36 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Info } from "lucide-react";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { useSession } from "@/lib/auth/SessionProvider";
+import { dashboardPathForRole } from "@/lib/auth/session";
 
 export function LoginForm() {
-  const [notice, setNotice] = useState(false);
+  const router = useRouter();
+  const { login } = useSession();
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setNotice(true);
+    const formData = new FormData(event.currentTarget);
+    const email = String(formData.get("email") ?? "").trim();
+    const password = String(formData.get("password") ?? "");
+
+    setSubmitting(true);
+    const result = await login({ email, password });
+    setSubmitting(false);
+
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+
+    router.push(dashboardPathForRole(result.session.role));
   }
 
   return (
@@ -30,14 +49,14 @@ export function LoginForm() {
           <Input id="login-password" name="password" type="password" placeholder="••••••••" autoComplete="current-password" required />
         </FormField>
 
-        <Button type="submit" variant="primary-lime" size="lg" className="w-full">
-          Log In
+        <Button type="submit" variant="primary-lime" size="lg" className="w-full" disabled={submitting}>
+          {submitting ? "Logging in…" : "Log In"}
         </Button>
 
-        {notice ? (
+        {error ? (
           <div className="flex items-start gap-2 rounded-xl bg-surface p-3 text-xs text-muted">
             <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-            <span>Account login isn&apos;t live yet — we&apos;re getting things ready.</span>
+            <span>{error}</span>
           </div>
         ) : null}
       </form>

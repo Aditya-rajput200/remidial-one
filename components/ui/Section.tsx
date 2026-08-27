@@ -2,13 +2,14 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { Container } from "@/components/ui/Container";
 
-type Tone = "white" | "surface" | "ink" | "lime";
+type Tone = "white" | "surface" | "ink" | "lime" | "forest";
 
 const toneClasses: Record<Tone, string> = {
   white: "bg-white text-ink",
   surface: "bg-surface text-ink",
   ink: "bg-ink text-white",
-  lime: "bg-lime text-ink",
+  lime: "bg-brand-gradient text-white",
+  forest: "bg-forest text-white",
 };
 
 export function Section({

@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { primaryNav } from "@/lib/content/nav";
 import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/layout/Logo";
+import { useSession } from "@/lib/auth/SessionProvider";
 import { cn } from "@/lib/cn";
 
 export function MobileNav({
@@ -14,6 +15,8 @@ export function MobileNav({
   open: boolean;
   onClose: () => void;
 }) {
+  const { session } = useSession();
+  const dashboardHref = session?.role === "mentor" ? "/mentor/dashboard" : "/student/dashboard";
   return (
     <div
       className={cn(
@@ -68,12 +71,20 @@ export function MobileNav({
         </nav>
 
         <div className="mt-auto flex flex-col gap-3">
-          <Button href="/signup" variant="primary-lime" size="lg" className="w-full" onClick={onClose}>
-            Get Started
-          </Button>
-          <Button href="/login" variant="secondary-outline" size="lg" className="w-full" onClick={onClose}>
-            Login
-          </Button>
+          {session ? (
+            <Button href={dashboardHref} variant="primary-lime" size="lg" className="w-full" onClick={onClose}>
+              Go to Dashboard
+            </Button>
+          ) : (
+            <>
+              <Button href="/signup" variant="primary-lime" size="lg" className="w-full" onClick={onClose}>
+                Get Started
+              </Button>
+              <Button href="/login" variant="secondary-outline" size="lg" className="w-full" onClick={onClose}>
+                Login
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </div>

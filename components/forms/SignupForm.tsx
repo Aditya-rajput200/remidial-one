@@ -2,18 +2,43 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { Info } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
+import { useSession } from "@/lib/auth/SessionProvider";
+import { dashboardPathForRole } from "@/lib/auth/session";
 
 export function SignupForm() {
-  const [notice, setNotice] = useState(false);
+  const router = useRouter();
+  const { signup } = useSession();
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setNotice(true);
+    const formData = new FormData(event.currentTarget);
+    const name = String(formData.get("name") ?? "").trim();
+    const email = String(formData.get("email") ?? "").trim();
+    const password = String(formData.get("password") ?? "");
+    const role = String(formData.get("role") ?? "student") as "student" | "mentor";
+
+    if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Please enter your name and a valid email address.");
+      return;
+    }
+
+    setSubmitting(true);
+    const result = await signup({ name, email, password, role });
+    setSubmitting(false);
+
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+
+    router.push(dashboardPathForRole(result.session.role));
   }
 
   return (
@@ -33,23 +58,22 @@ export function SignupForm() {
         <FormField label="I am a" htmlFor="signup-role">
           <Select id="signup-role" name="role" defaultValue="student">
             <option value="student">Student</option>
-            <option value="parent">Parent</option>
+            <option value="mentor">Mentor</option>
           </Select>
         </FormField>
         <FormField label="Password" htmlFor="signup-password">
           <Input id="signup-password" name="password" type="password" placeholder="••••••••" autoComplete="new-password" required />
         </FormField>
 
-        <Button type="submit" variant="primary-lime" size="lg" className="w-full">
-          Create Account
-        </Button>
-
-        {notice ? (
-          <div className="flex items-start gap-2 rounded-xl bg-surface p-3 text-xs text-muted">
-            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-            <span>Sign-up isn&apos;t live yet — we&apos;re getting things ready.</span>
-          </div>
+        {error ? (
+          <p className="text-xs font-medium text-error" role="alert">
+            {error}
+          </p>
         ) : null}
+
+        <Button type="submit" variant="primary-lime" size="lg" className="w-full" disabled={submitting}>
+          {submitting ? "Creating account…" : "Create Account"}
+        </Button>
       </form>
 
       <p className="text-center text-sm text-muted">
