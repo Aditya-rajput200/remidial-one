@@ -153,7 +153,12 @@ export function BlogEditor({ initial }: { initial?: BlogPostFormValue }) {
           </Card>
 
           <Card>
-            <label className="mb-2 block text-sm font-medium text-ink">Content</label>
+            <label className="mb-1 block text-sm font-medium text-ink">Content</label>
+            <p className="mb-2 text-xs leading-relaxed text-muted">
+              Paste directly from ChatGPT, Google Docs, or a Markdown file — headings, bold, and
+              lists carry over automatically. Since the post title is already the page&apos;s H1,
+              any H1 in pasted content becomes an H2 here.
+            </p>
             <RichTextEditor value={value.content} onChange={(html) => update("content", html)} />
           </Card>
         </div>

@@ -14,11 +14,22 @@ const ALLOWED_TAGS = new Set([
   "h2", "h3", "h4",
   "ul", "ol", "li",
   "blockquote", "a", "img", "code", "pre",
+  "table", "thead", "tbody", "tfoot", "tr", "th", "td",
 ]);
+
+// The post title is already rendered as the page's only <h1>, and the editor
+// only styles h2–h4 (see .prose-blog in globals.css) — so rather than
+// silently dropping out-of-range headings pasted from ChatGPT, Word, or a
+// Markdown file (which would strip the tag but leave its text as an
+// unstyled run merged into the surrounding paragraph), fold them onto the
+// nearest supported level.
+const TAG_REMAP: Record<string, string> = { h1: "h2", h5: "h4", h6: "h4" };
 
 const ALLOWED_ATTRS: Record<string, Set<string>> = {
   a: new Set(["href", "title", "target", "rel"]),
   img: new Set(["src", "alt", "title", "width", "height"]),
+  th: new Set(["colspan", "rowspan"]),
+  td: new Set(["colspan", "rowspan"]),
 };
 
 const SAFE_URL_PROTOCOLS = ["http:", "https:", "mailto:", "tel:"];
@@ -67,7 +78,7 @@ export function sanitizeBlogHtml(html: string): string {
     .replace(/<!--[\s\S]*?-->/g, "");
 
   out = out.replace(/<(\/?)([a-zA-Z0-9]+)([^>]*)>/g, (full, closing: string, rawTag: string, attrs: string) => {
-    const tag = rawTag.toLowerCase();
+    const tag = TAG_REMAP[rawTag.toLowerCase()] ?? rawTag.toLowerCase();
     if (!ALLOWED_TAGS.has(tag)) return "";
     if (closing) return `</${tag}>`;
     const selfClosing = /\/\s*$/.test(attrs) || tag === "br";
