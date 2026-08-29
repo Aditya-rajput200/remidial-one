@@ -6,8 +6,9 @@ import { ContactForm } from "@/components/forms/ContactForm";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "Contact Us",
-  description: "Get in touch with the Remedial One team — for students, parents, and prospective mentors.",
+  title: "Contact Us — Free Guidance for Students & Parents",
+  description:
+    "Get in touch with the Remedial One team for free guidance on personalized learning, choosing a subject or mentor, or becoming a mentor yourself.",
   path: "/contact",
 });
 
@@ -18,9 +19,10 @@ export default function ContactPage() {
         <Breadcrumbs items={[{ name: "Home", path: "/" }, { name: "Contact", path: "/contact" }]} />
         <div className="mt-6">
           <SectionHeading
+            as="h1"
             eyebrow="Contact"
             title="We'd love to hear from you."
-            description="Questions about learning, mentorship, or becoming a mentor — reach out and our team will get back to you."
+            description="Not sure which subject, class, or learning path fits best? Reach out for free guidance — questions about personalized learning, mentorship, or becoming a mentor are all welcome, and our team will get back to you."
           />
         </div>
       </Section>

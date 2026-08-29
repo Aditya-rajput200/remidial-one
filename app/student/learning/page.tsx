@@ -63,7 +63,7 @@ export default function StudentLearningPage() {
           title="No active subjects yet"
           description="Once you book a session, the subject will appear here with your progress."
           action={
-            <Button href="/subjects" variant="primary-black">
+            <Button href="/one-to-one-tuition#subjects" variant="primary-black">
               Browse Subjects
             </Button>
           }

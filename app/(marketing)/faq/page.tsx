@@ -23,6 +23,7 @@ export default function FaqPage() {
         <Breadcrumbs items={[{ name: "Home", path: "/" }, { name: "FAQ", path: "/faq" }]} />
         <div className="mt-6">
           <SectionHeading
+            as="h1"
             eyebrow="FAQ"
             title="Frequently asked questions."
             description="Can't find what you're looking for? Reach out and we'll get back to you."

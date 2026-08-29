@@ -22,6 +22,7 @@ export default function MentorsPage() {
         <Breadcrumbs items={[{ name: "Home", path: "/" }, { name: "Mentors", path: "/mentors" }]} />
         <div className="mt-6">
           <SectionHeading
+            as="h1"
             eyebrow="Mentors"
             title="Find a mentor built for how you learn."
             description="Mentor applications are open right now. Full profiles — subjects, qualifications, availability, and reviews — will appear here as mentors are verified and onboarded."

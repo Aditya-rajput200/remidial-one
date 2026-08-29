@@ -42,8 +42,8 @@ export const PERMISSIONS = {
   "attendance.read": "View attendance records",
   "attendance.correct": "Modify an attendance record (requires reason)",
 
-  "assignments.read": "View any assignment or submission",
-  "assignments.moderate": "Edit grades/feedback on any submission",
+  "assessments.read": "View any assessment, attempt, or assessment analytics",
+  "assessments.moderate": "Override marks, force-publish results, or archive any assessment",
 
   "resources.manage": "Approve, hide, delete, or categorize resources",
 
@@ -80,7 +80,7 @@ const ADMIN_BASELINE: PermissionKey[] = [
   "recordings.read",
   "attendance.read",
   "attendance.correct",
-  "assignments.read",
+  "assessments.read",
   "resources.manage",
   "payments.read",
   "notifications.send",

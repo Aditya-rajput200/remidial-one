@@ -8,6 +8,7 @@ export function SectionHeading({
   description,
   align = "left",
   tone = "ink",
+  as: Heading = "h2",
   className,
 }: {
   eyebrow?: string;
@@ -15,6 +16,7 @@ export function SectionHeading({
   description?: ReactNode;
   align?: "left" | "center";
   tone?: "ink" | "white";
+  as?: "h1" | "h2";
   className?: string;
 }) {
   return (
@@ -30,14 +32,14 @@ export function SectionHeading({
           {eyebrow}
         </Badge>
       ) : null}
-      <h2
+      <Heading
         className={cn(
           "text-3xl font-semibold tracking-tight sm:text-4xl lg:text-[2.75rem] lg:leading-[1.1]",
           tone === "white" ? "text-white" : "text-ink"
         )}
       >
         {title}
-      </h2>
+      </Heading>
       {description ? (
         <p
           className={cn(

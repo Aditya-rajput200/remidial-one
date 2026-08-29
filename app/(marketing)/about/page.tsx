@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/Button";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "About Remedial One",
+  title: "About Remedial One — Personalized Remedial Education",
   description:
-    "Remedial One is a global 1-to-1 personalized learning and mentorship platform, built to give every student the attention a classroom can't.",
+    "Remedial One is a global 1-to-1 personalized learning and mentorship platform, built to identify learning gaps and give every student the individual attention a classroom can't.",
   path: "/about",
 });
 
@@ -26,6 +26,7 @@ export default function AboutPage() {
         <Breadcrumbs items={[{ name: "Home", path: "/" }, { name: "About", path: "/about" }]} />
         <div className="mt-6">
           <SectionHeading
+            as="h1"
             eyebrow="About Remedial One"
             title="Learning should feel personal. So we built it that way."
             description="Remedial One connects students with qualified mentors for personalized, 1-to-1 learning — academic subjects, exam preparation, and skills beyond the classroom. We started with students in India, and we're building for the world."
@@ -39,6 +40,12 @@ export default function AboutPage() {
           title="One student. One mentor. One learning journey."
           description="Most classrooms are built for a room, not a person. We believe learning works best when it's paced around the individual — their goals, their gaps, and the way they actually understand things."
         />
+        <p className="mt-6 max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
+          The name Remedial One reflects that belief. Remedial education, to us, isn&apos;t a label
+          for students who are &ldquo;behind&rdquo; — it&apos;s the practice of identifying specific
+          learning gaps through assessment and closing them with a mentor who adapts to that one
+          student, one topic at a time.
+        </p>
       </Section>
 
       <Section>

@@ -69,8 +69,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  --font-sans: var(--font-plus-jakarta);
-  --font-serif: var(--font-fraunces);
+  --font-sans: var(--font-rubik);
 
   --shadow-card: var(--shadow-card);
   --shadow-lift: var(--shadow-lift);
@@ -96,12 +95,6 @@
   :focus-visible {
     outline: 2px solid var(--color-ink);
     outline-offset: 2px;
-  }
-
-  h1,
-  h2,
-  h3 {
-    font-family: var(--font-serif), Georgia, "Times New Roman", serif;
   }
 }
 
@@ -133,6 +126,82 @@
 
 .animate-marquee {
   animation: marquee 32s linear infinite;
+}
+
+/* Shared styling for blog post HTML — both the admin RichTextEditor's
+   contentEditable/preview surfaces and the public blog post page render
+   through this class, so authored posts look the same as they're written. */
+.prose-blog {
+  line-height: 1.75;
+}
+
+.prose-blog[data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: var(--color-muted-2);
+}
+
+.prose-blog p {
+  margin-block: 1em;
+}
+
+.prose-blog h2 {
+  margin-block: 1.4em 0.6em;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.prose-blog h3 {
+  margin-block: 1.2em 0.5em;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.prose-blog ul,
+.prose-blog ol {
+  margin-block: 1em;
+  padding-left: 1.5em;
+}
+
+.prose-blog ul {
+  list-style: disc;
+}
+
+.prose-blog ol {
+  list-style: decimal;
+}
+
+.prose-blog blockquote {
+  margin-block: 1.2em;
+  border-left: 3px solid var(--color-lime);
+  padding-left: 1em;
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+.prose-blog pre {
+  margin-block: 1em;
+  overflow-x: auto;
+  border-radius: 0.75rem;
+  background: var(--color-ink);
+  color: var(--color-white);
+  padding: 1em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.875em;
+}
+
+.prose-blog a {
+  color: var(--color-lime-deep);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose-blog img {
+  margin-block: 1.2em;
+  border-radius: 0.75rem;
+  max-width: 100%;
+  height: auto;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session.server";
@@ -5,6 +6,10 @@ import { toPublicUser } from "@/lib/auth/public-user";
 import type { Session } from "@/lib/auth/session";
 import { SessionProvider } from "@/lib/auth/SessionProvider";
 import { DashboardGate } from "@/components/dashboard/DashboardGate";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 // Resolves the session server-side (one DB query) so the dashboard renders
 // with a known session on first paint instead of the client fetching

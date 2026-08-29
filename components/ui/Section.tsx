@@ -18,15 +18,17 @@ export function Section({
   containerClassName,
   tone = "white",
   as: Tag = "section",
+  id,
 }: {
   children: ReactNode;
   className?: string;
   containerClassName?: string;
   tone?: Tone;
   as?: "section" | "div";
+  id?: string;
 }) {
   return (
-    <Tag className={cn("py-16 sm:py-20 lg:py-28", toneClasses[tone], className)}>
+    <Tag id={id} className={cn("py-16 sm:py-20 lg:py-28", toneClasses[tone], className)}>
       <Container className={containerClassName}>{children}</Container>
     </Tag>
   );

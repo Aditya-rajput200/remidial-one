@@ -1,20 +1,13 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Fraunces } from "next/font/google";
+import { Rubik } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/lib/auth/SessionProvider";
 import { JsonLd } from "@/components/ui/JsonLd";
-import { SITE_NAME, SITE_TAGLINE, SITE_URL, organizationJsonLd } from "@/lib/seo";
+import { SITE_NAME, SITE_TAGLINE, SITE_URL, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 
-const plusJakarta = Plus_Jakarta_Sans({
-  variable: "--font-plus-jakarta",
+const rubik = Rubik({
+  variable: "--font-rubik",
   subsets: ["latin"],
-});
-
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -24,14 +17,15 @@ export const metadata: Metadata = {
     template: `%s | ${SITE_NAME}`,
   },
   description:
-    "Remedial One is a global 1-to-1 personalized learning platform connecting students with qualified mentors for academics, exam preparation, and skills beyond the classroom.",
+    "Remedial One is a global 1-to-1 personalized learning platform that identifies learning gaps through assessment and connects students with qualified mentors for remedial education, exam preparation, and skills beyond the classroom.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${plusJakarta.variable} ${fraunces.variable} h-full antialiased`}>
+    <html lang="en" className={`${rubik.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-white text-ink">
         <JsonLd data={organizationJsonLd()} />
+        <JsonLd data={websiteJsonLd()} />
         <SessionProvider>{children}</SessionProvider>
       </body>
     </html>

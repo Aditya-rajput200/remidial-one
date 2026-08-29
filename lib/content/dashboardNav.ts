@@ -13,6 +13,8 @@ import {
   Settings,
   ClipboardCheck,
   ShieldCheck,
+  ListChecks,
+  Newspaper,
   type LucideIcon,
 } from "lucide-react";
 
@@ -26,6 +28,7 @@ export const studentNav: DashboardNavItem[] = [
   { label: "Overview", href: "/student/dashboard", icon: LayoutDashboard },
   { label: "My Learning", href: "/student/learning", icon: BookOpen },
   { label: "Mentors", href: "/student/mentors", icon: UsersRound },
+  { label: "Assessments", href: "/student/assessments", icon: ListChecks },
   { label: "Sessions", href: "/student/sessions", icon: CalendarClock },
   { label: "Calendar", href: "/student/calendar", icon: Calendar },
   { label: "Progress", href: "/student/progress", icon: LineChart },
@@ -38,6 +41,7 @@ export const mentorNav: DashboardNavItem[] = [
   { label: "Overview", href: "/mentor/dashboard", icon: LayoutDashboard },
   { label: "Profile", href: "/mentor/profile", icon: GraduationCap },
   { label: "Students", href: "/mentor/students", icon: UsersRound },
+  { label: "Assessments", href: "/mentor/assessments", icon: ListChecks },
   { label: "Sessions", href: "/mentor/sessions", icon: CalendarClock },
   { label: "Calendar", href: "/mentor/calendar", icon: Calendar },
   { label: "Resources", href: "/mentor/resources", icon: FolderOpen },
@@ -52,7 +56,9 @@ export const adminNav: DashboardNavItem[] = [
   { label: "Mentors", href: "/admin/mentors", icon: GraduationCap },
   { label: "Students", href: "/admin/students", icon: UsersRound },
   { label: "Bookings", href: "/admin/bookings", icon: CalendarClock },
+  { label: "Blog", href: "/admin/blog", icon: Newspaper },
   { label: "Audit Log", href: "/admin/audit", icon: ShieldCheck },
+  { label: "Assessments", href: "/admin/assessments", icon: ListChecks },
 ];
 
 export const adminBottomNav: DashboardNavItem[] = [
@@ -63,16 +69,20 @@ export const adminBottomNav: DashboardNavItem[] = [
 ];
 
 // Mobile bottom nav shows a compact subset; the rest live in the drawer.
+// Indices below are Overview / Sessions / Calendar / Resources — kept as
+// direct index lookups (not label search) to match the rest of this file;
+// re-check these whenever studentNav's order changes.
 export const studentBottomNav: DashboardNavItem[] = [
   studentNav[0],
-  studentNav[3],
   studentNav[4],
+  studentNav[5],
   studentNav[7],
 ];
 
+// Indices below are Overview / Sessions / Resources / Calendar.
 export const mentorBottomNav: DashboardNavItem[] = [
   mentorNav[0],
-  mentorNav[3],
-  mentorNav[6],
   mentorNav[4],
+  mentorNav[6],
+  mentorNav[5],
 ];

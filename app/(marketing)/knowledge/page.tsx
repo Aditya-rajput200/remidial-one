@@ -46,6 +46,7 @@ export default function KnowledgePage() {
         <Breadcrumbs items={[{ name: "Home", path: "/" }, { name: "Knowledge & Values", path: "/knowledge" }]} />
         <div className="mt-6">
           <SectionHeading
+            as="h1"
             eyebrow="Knowledge, Values & Perspective"
             title="Learning that goes beyond the syllabus."
             description="Alongside academics, Remedial One introduces students to knowledge, values, and cultural perspective — presented respectfully, age-appropriately, and inclusively, never as religious or political instruction."

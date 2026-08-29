@@ -7,7 +7,8 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Button } from "@/components/ui/Button";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { SubjectCard } from "@/components/ui/SubjectCard";
-import { buildMetadata } from "@/lib/seo";
+import { JsonLd } from "@/components/ui/JsonLd";
+import { buildMetadata, courseJsonLd } from "@/lib/seo";
 
 export function generateStaticParams() {
   return classBands.map((band) => ({ class: band.slug }));
@@ -37,6 +38,13 @@ export default async function ClassBandPage(props: PageProps<"/classes/[class]">
 
   return (
     <>
+      <JsonLd
+        data={courseJsonLd({
+          name: `${band.name} — Personalized 1-to-1 Learning`,
+          description: band.description,
+          path: `/classes/${band.slug}`,
+        })}
+      />
       <Section className="pb-10 pt-10 sm:pt-14">
         <Breadcrumbs
           items={[

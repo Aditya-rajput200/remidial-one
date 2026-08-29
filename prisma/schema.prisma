@@ -143,6 +143,16 @@ model User {
   notesUploaded            Note[]                  @relation("NoteUploader")
   classNotesGenerated      ClassNote[]             @relation("ClassNoteGenerator")
 
+  chaptersCreated      Chapter[]
+  topicsCreated        Topic[]
+  questionsCreated     Question[]
+  assessmentsCreated   Assessment[]
+  evaluationsGiven     Evaluation[]
+  feedbackAuthored     Feedback[]
+  recommendationsMade  Recommendation[]
+  assessmentEventsMade AssessmentEvent[]
+  blogPostsAuthored    BlogPost[]
+
   @@index([role])
   @@index([status])
 }
@@ -257,6 +267,11 @@ model StudentProfile {
 
   parentLinks ParentChildLink[]
   bookings    Booking[]
+
+  assessmentAssignments AssessmentAssignment[]
+  studentAssessments    StudentAssessment[]
+  learningProfile       StudentLearningProfile?
+  recommendations       Recommendation[]
 }
 
 model MentorProfile {
@@ -340,6 +355,10 @@ model Subject {
   grades   Grade[]
   mentors  MentorProfile[]
   bookings Booking[]
+
+  chapters    Chapter[]
+  assessments Assessment[]
+  questions   Question[]
 
   @@index([isPublished])
 }
@@ -473,6 +492,38 @@ model ClassNote {
 
   @@index([bookingId])
   @@index([generatedById])
+}
+
+enum BlogStatus {
+  DRAFT
+  PUBLISHED
+}
+
+// A marketing blog post, authored via the admin CMS editor. Gated by the
+// existing cms.read/cms.update/cms.publish permissions (see
+// lib/auth/permissions.ts) rather than a new permission set — publishing
+// (DRAFT -> PUBLISHED) specifically requires cms.publish, which ADMIN does
+// not hold by default (see permissions.ts DEFAULT_ROLE_PERMISSIONS comment).
+model BlogPost {
+  id             String     @id @default(cuid())
+  slug           String     @unique
+  title          String
+  excerpt        String
+  content        String // sanitized HTML from the admin rich text editor — see lib/blog/sanitize.ts
+  coverImageUrl  String?
+  category       String?
+  tags           String[]   @default([])
+  status         BlogStatus @default(DRAFT)
+  seoTitle       String?
+  seoDescription String?
+  authorId       String
+  author         User       @relation(fields: [authorId], references: [id])
+  publishedAt    DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([authorId])
 }
 
 // ---------------------------------------------------------------------------
@@ -639,4 +690,798 @@ model AuditLog {
   @@index([resourceType, resourceId])
   @@index([action])
   @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Assessment / test engine.
+//
+// A Question lives in a reusable bank (createdById-owned) and is attached to
+// zero or more AssessmentModules via AssessmentModuleQuestion, which carries
+// the per-use marks/order — the same question can be reused across tests at
+// different marks. Chapter/Topic are real per-Subject catalog entities (not
+// free text) purely so chapter/topic analytics can group cleanly; mentors
+// create them inline while building a test.
+//
+// Once an Assessment first leaves DRAFT for LIVE, `publishedSnapshot` freezes
+// its module/question structure — later edits bump `version` rather than
+// mutating what students already in progress are answering (mirrors the
+// Booking/Whiteboard "existing state must not be corrupted by later edits"
+// principle elsewhere in this schema).
+//
+// Analytics (ChapterMetric/TopicMetric/SkillMetric/CognitiveMetric/
+// QuestionTypeMetric/AssessmentMetric/QuestionMetric/StudentLearningProfile)
+// are precomputed and persisted at evaluation-finalize/publish time, not
+// recomputed per page view — there is no queue/worker in this stack, so
+// "precomputed" here means "computed synchronously by the route that just
+// changed the underlying data," not "computed in a background job."
+// ---------------------------------------------------------------------------
+
+enum QuestionType {
+  MCQ
+  MULTIPLE_CORRECT
+  TRUE_FALSE
+  FILL_BLANK
+  MATCH_FOLLOWING
+  SHORT_ANSWER
+  LONG_ANSWER
+  IMAGE_ANSWER
+  NUMERICAL
+  EQUATION
+}
+
+enum QuestionDifficulty {
+  EASY
+  MEDIUM
+  HARD
+  VERY_HARD
+}
+
+enum CognitiveLevel {
+  REMEMBER
+  UNDERSTAND
+  APPLY
+  ANALYZE
+  EVALUATE
+  CREATE
+}
+
+enum QuestionSkill {
+  MEMORY
+  RECALL
+  CONCEPTUAL_UNDERSTANDING
+  READING
+  WRITING
+  MENTAL_ABILITY
+  LOGICAL_REASONING
+  CRITICAL_THINKING
+  PROBLEM_SOLVING
+  ANALYTICAL_THINKING
+  APPLICATION
+  CALCULATION
+  INTERPRETATION
+  CREATIVITY
+  COMMUNICATION
+}
+
+enum QuestionPurpose {
+  DIAGNOSTIC
+  PRACTICE
+  REVISION
+  ASSESSMENT
+  COMPETITIVE
+  REMEDIAL
+  MASTERY
+}
+
+enum QuestionStatus {
+  DRAFT
+  APPROVED
+  ARCHIVED
+}
+
+enum QuestionSource {
+  MANUAL
+  AI_GENERATED
+  IMPORTED
+}
+
+enum AssessmentStatus {
+  DRAFT
+  REVIEW
+  SCHEDULED
+  LIVE
+  PAUSED
+  ENDED
+  EVALUATION
+  RESULT_READY
+  ARCHIVED
+}
+
+enum ResultVisibility {
+  SCORE_ONLY
+  SCORE_AND_ANSWERS
+  FULL_DETAIL
+}
+
+enum AttemptStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  SUBMITTED
+  AUTO_SUBMITTED
+  EXPIRED
+}
+
+enum QuestionAttemptState {
+  NOT_VISITED
+  VISITED
+  ANSWERED
+  MARKED_FOR_REVIEW
+  ANSWERED_MARKED
+}
+
+enum SubmissionReason {
+  MANUAL
+  AUTO_SUBMITTED
+  TIME_EXPIRED
+  TEACHER_ENDED
+}
+
+enum EvaluationStatus {
+  PENDING
+  AI_SUGGESTED
+  TEACHER_REVIEWED
+  FINALIZED
+}
+
+enum ResultStatus {
+  EVALUATION_PENDING
+  UNDER_REVIEW
+  READY_TO_PUBLISH
+  PUBLISHED
+}
+
+enum FeedbackScope {
+  OVERALL
+  MODULE
+  QUESTION
+  CHAPTER
+}
+
+enum RecommendationSource {
+  AI
+  TEACHER
+}
+
+enum AssessmentEventType {
+  TEST_STARTED
+  QUESTION_VIEWED
+  ANSWER_SAVED
+  ANSWER_CHANGED
+  MARKED_FOR_REVIEW
+  MODULE_STARTED
+  MODULE_COMPLETED
+  TEST_SUBMITTED
+  TEST_AUTO_SUBMITTED
+  TEST_PAUSED
+  TEST_RESUMED
+}
+
+// ---------------------------------------------------------------------------
+// Catalog: chapters/topics per subject.
+// ---------------------------------------------------------------------------
+
+model Chapter {
+  id          String   @id @default(cuid())
+  subjectId   String
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  name        String
+  order       Int      @default(0)
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  topics    Topic[]
+  questions Question[]
+
+  chapterMetrics ChapterMetric[]
+
+  @@unique([subjectId, name])
+  @@index([subjectId])
+}
+
+model Topic {
+  id          String   @id @default(cuid())
+  chapterId   String
+  chapter     Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  name        String
+  order       Int      @default(0)
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  questions Question[]
+
+  topicMetrics TopicMetric[]
+
+  @@unique([chapterId, name])
+  @@index([chapterId])
+}
+
+// ---------------------------------------------------------------------------
+// Question bank. `content` holds type-specific payload (options/correct
+// ids/tolerance/pairs/accepted answers) — validated by a discriminated Zod
+// union per QuestionType in lib/validation/question.ts on every write,
+// manual or AI-generated alike. Same "typed columns for what's filtered,
+// JSON for what varies by type" split already used by WhiteboardObject.data.
+// ---------------------------------------------------------------------------
+
+model Question {
+  id          String   @id @default(cuid())
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  subjectId   String?
+  subject     Subject? @relation(fields: [subjectId], references: [id])
+  chapterId   String?
+  chapter     Chapter? @relation(fields: [chapterId], references: [id])
+  topicId     String?
+  topic       Topic?   @relation(fields: [topicId], references: [id])
+  subtopic    String?
+
+  type           QuestionType
+  difficulty     QuestionDifficulty @default(MEDIUM)
+  cognitiveLevel CognitiveLevel     @default(UNDERSTAND)
+  skills         QuestionSkill[]    @default([])
+  purpose        QuestionPurpose    @default(ASSESSMENT)
+  status         QuestionStatus     @default(DRAFT)
+  source         QuestionSource     @default(MANUAL)
+
+  text        String
+  explanation String?
+  hint        String?
+  tags        String[] @default([])
+
+  defaultMarks         Decimal @default(1) @db.Decimal(6, 2)
+  defaultNegativeMarks Decimal @default(0) @db.Decimal(6, 2)
+  estimatedTimeSeconds Int     @default(60)
+
+  // Type-specific payload, e.g. { options: [{id,text}], correctOptionIds: [] }
+  // for MCQ, { acceptedAnswers: [], caseSensitive: false } for FILL_BLANK,
+  // { tolerance, unit } for NUMERICAL, { pairs: [{left,right}] } for
+  // MATCH_FOLLOWING. See lib/validation/question.ts for the full contract.
+  content Json
+  media   Json?
+
+  // Generation params/model when source = AI_GENERATED, kept for audit and
+  // "regenerate" — never trusted as-is, always re-validated against `content`.
+  aiMeta Json?
+
+  isArchived Boolean @default(false)
+  usageCount Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  moduleQuestions  AssessmentModuleQuestion[]
+  questionAttempts StudentQuestionAttempt[]
+  metric           QuestionMetric?
+
+  @@index([createdById])
+  @@index([subjectId])
+  @@index([chapterId])
+  @@index([topicId])
+  @@index([type])
+  @@index([difficulty])
+  @@index([cognitiveLevel])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Assessment (test) + modules + assignment to specific students.
+// ---------------------------------------------------------------------------
+
+model Assessment {
+  id          String   @id @default(cuid())
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  title       String
+  description String?
+  subjectId   String?
+  subject     Subject? @relation(fields: [subjectId], references: [id])
+  gradeLabel  String?
+
+  difficulty   QuestionDifficulty?
+  instructions String?
+
+  durationMinutes Int
+  totalMarks      Decimal  @default(0) @db.Decimal(7, 2)
+  passingMarks    Decimal? @db.Decimal(7, 2)
+  attemptLimit    Int      @default(1)
+
+  negativeMarkingEnabled Boolean @default(false)
+  calculatorAllowed      Boolean @default(false)
+  freeNavigation         Boolean @default(true)
+  autoSubmitOnExpiry     Boolean @default(true)
+  randomizeQuestions     Boolean @default(false)
+  randomizeOptions       Boolean @default(false)
+
+  resultVisibility   ResultVisibility @default(SCORE_ONLY)
+  showCorrectAnswers Boolean          @default(false)
+  showSolutions      Boolean          @default(false)
+  showRank           Boolean          @default(false)
+  showClassAverage   Boolean          @default(false)
+
+  startAt DateTime?
+  endAt   DateTime?
+
+  status AssessmentStatus @default(DRAFT)
+
+  // Frozen module/question/marks structure as of the first DRAFT -> LIVE
+  // transition (see the section comment above) — student attempts always
+  // read/score against this, never live-editable state.
+  version           Int   @default(1)
+  publishedSnapshot Json?
+
+  resultsPublishedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  modules            AssessmentModule[]
+  assignments        AssessmentAssignment[]
+  studentAssessments StudentAssessment[]
+  events             AssessmentEvent[]
+  metric             AssessmentMetric?
+
+  @@index([createdById])
+  @@index([status])
+  @@index([subjectId])
+}
+
+model AssessmentAssignment {
+  id           String         @id @default(cuid())
+  assessmentId String
+  assessment   Assessment     @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  assignedAt   DateTime       @default(now())
+
+  @@unique([assessmentId, studentId])
+  @@index([studentId])
+}
+
+model AssessmentModule {
+  id               String     @id @default(cuid())
+  assessmentId     String
+  assessment       Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  name             String
+  description      String?
+  instructions     String?
+  order            Int        @default(0)
+  timeLimitMinutes Int?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  questions      AssessmentModuleQuestion[]
+  moduleAttempts StudentModuleAttempt[]
+
+  @@index([assessmentId, order])
+}
+
+model AssessmentModuleQuestion {
+  id            String           @id @default(cuid())
+  moduleId      String
+  module        AssessmentModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  questionId    String
+  question      Question         @relation(fields: [questionId], references: [id])
+  order         Int              @default(0)
+  marks         Decimal          @db.Decimal(6, 2)
+  negativeMarks Decimal          @default(0) @db.Decimal(6, 2)
+
+  questionAttempts StudentQuestionAttempt[]
+
+  @@unique([moduleId, questionId])
+  @@index([moduleId, order])
+  @@index([questionId])
+}
+
+// ---------------------------------------------------------------------------
+// Student attempts.
+// ---------------------------------------------------------------------------
+
+model StudentAssessment {
+  id            String         @id @default(cuid())
+  assessmentId  String
+  assessment    Assessment     @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  studentId     String
+  student       StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  attemptNumber Int            @default(1)
+  status        AttemptStatus  @default(NOT_STARTED)
+
+  startedAt        DateTime?
+  // Server-authoritative deadline = startedAt + assessment.durationMinutes at
+  // start time. Checked (not trusted from the client) on every autosave and
+  // on submit — this is the "server-authoritative timer" without needing a
+  // background worker to force-expire it (see schema section comment).
+  serverExpiresAt  DateTime?
+  submittedAt      DateTime?
+  submissionReason SubmissionReason?
+
+  totalMarksObtained Decimal? @db.Decimal(7, 2)
+  totalMaxMarks      Decimal? @db.Decimal(7, 2)
+  accuracyPercent    Decimal? @db.Decimal(5, 2)
+  timeSpentSeconds   Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  moduleAttempts   StudentModuleAttempt[]
+  questionAttempts StudentQuestionAttempt[]
+  result           AssessmentResult?
+  events           AssessmentEvent[]
+
+  @@unique([assessmentId, studentId, attemptNumber])
+  @@index([assessmentId])
+  @@index([studentId])
+  @@index([status])
+}
+
+model StudentModuleAttempt {
+  id                  String            @id @default(cuid())
+  studentAssessmentId String
+  studentAssessment   StudentAssessment @relation(fields: [studentAssessmentId], references: [id], onDelete: Cascade)
+  moduleId            String
+  module              AssessmentModule  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  startedAt           DateTime?
+  completedAt         DateTime?
+  timeSpentSeconds    Int               @default(0)
+
+  @@unique([studentAssessmentId, moduleId])
+  @@index([moduleId])
+}
+
+model StudentQuestionAttempt {
+  id                  String                   @id @default(cuid())
+  studentAssessmentId String
+  studentAssessment   StudentAssessment        @relation(fields: [studentAssessmentId], references: [id], onDelete: Cascade)
+  moduleQuestionId    String
+  moduleQuestion      AssessmentModuleQuestion @relation(fields: [moduleQuestionId], references: [id], onDelete: Cascade)
+  // Denormalized from moduleQuestion.questionId so analytics can join
+  // straight to Question (chapter/topic/skill/cognitive) without a detour
+  // through AssessmentModuleQuestion on every aggregation query.
+  questionId          String
+  question            Question                 @relation(fields: [questionId], references: [id])
+
+  state            QuestionAttemptState @default(NOT_VISITED)
+  visitCount       Int                  @default(0)
+  timeSpentSeconds Int                  @default(0)
+  firstAnsweredAt  DateTime?
+  lastAnsweredAt   DateTime?
+  changeCount      Int                  @default(0)
+
+  isCorrect     Boolean?
+  marksObtained Decimal? @db.Decimal(6, 2)
+
+  answer     StudentAnswer?
+  evaluation Evaluation?
+
+  @@unique([studentAssessmentId, moduleQuestionId])
+  @@index([studentAssessmentId])
+  @@index([questionId])
+}
+
+model StudentAnswer {
+  id                String                 @id @default(cuid())
+  questionAttemptId String                 @unique
+  questionAttempt   StudentQuestionAttempt @relation(fields: [questionAttemptId], references: [id], onDelete: Cascade)
+  // Shape depends on question type: selected option id(s), typed text,
+  // numeric value, match-the-following pairs, etc. — see
+  // lib/validation/question.ts for the per-type response contract.
+  response          Json
+  autosavedAt       DateTime               @default(now())
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+
+  attachments AnswerAttachment[]
+}
+
+// Image/handwritten answer upload — same shape as the existing Note model,
+// stored in Vercel Blob.
+model AnswerAttachment {
+  id        String        @id @default(cuid())
+  answerId  String
+  answer    StudentAnswer @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  fileUrl   String
+  fileName  String
+  fileSize  Int
+  mimeType  String
+  createdAt DateTime      @default(now())
+
+  @@index([answerId])
+}
+
+// ---------------------------------------------------------------------------
+// Evaluation. Evaluation *is* the teacher's row (status/finalMarks/feedback/
+// evaluatedBy) — there is no separate TeacherEvaluation table; AIEvaluation
+// hangs off it as an optional suggestion the teacher can accept, edit, or
+// ignore, but never one that can finalize marks itself.
+// ---------------------------------------------------------------------------
+
+model Evaluation {
+  id                String                 @id @default(cuid())
+  questionAttemptId String                 @unique
+  questionAttempt   StudentQuestionAttempt @relation(fields: [questionAttemptId], references: [id], onDelete: Cascade)
+  status            EvaluationStatus       @default(PENDING)
+  finalMarks        Decimal?               @db.Decimal(6, 2)
+  evaluatedById     String?
+  evaluatedBy       User?                  @relation(fields: [evaluatedById], references: [id])
+  evaluatedAt       DateTime?
+  feedback          String?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+
+  aiEvaluation AIEvaluation?
+
+  @@index([status])
+}
+
+model AIEvaluation {
+  id                String     @id @default(cuid())
+  evaluationId      String     @unique
+  evaluation        Evaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  suggestedMarks    Decimal?   @db.Decimal(6, 2)
+  keyPointsFound    String[]   @default([])
+  missingConcepts   String[]   @default([])
+  incorrectConcepts String[]   @default([])
+  suggestedFeedback String?
+  // OCR/transcription of a handwritten/image answer, when applicable.
+  ocrText           String?
+  model             String
+  rawResponse       Json?
+  createdAt         DateTime   @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Results + precomputed analytics. AssessmentResult.status/publishedAt is
+// the single gate a student's result endpoint checks — never inferred from
+// Assessment.status, so publishing can happen per-student as evaluation
+// finishes rather than all-or-nothing.
+// ---------------------------------------------------------------------------
+
+model AssessmentResult {
+  id                  String            @id @default(cuid())
+  studentAssessmentId String            @unique
+  studentAssessment   StudentAssessment @relation(fields: [studentAssessmentId], references: [id], onDelete: Cascade)
+  status              ResultStatus      @default(EVALUATION_PENDING)
+
+  totalMarksObtained Decimal @db.Decimal(7, 2)
+  totalMaxMarks      Decimal @db.Decimal(7, 2)
+  percentage         Decimal @db.Decimal(5, 2)
+  accuracyPercent    Decimal @db.Decimal(5, 2)
+
+  rank       Int?
+  percentile Decimal? @db.Decimal(5, 2)
+
+  overallFeedback String?
+
+  publishedAt   DateTime?
+  publishedById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  chapterMetrics      ChapterMetric[]
+  topicMetrics        TopicMetric[]
+  skillMetrics        SkillMetric[]
+  cognitiveMetrics    CognitiveMetric[]
+  questionTypeMetrics QuestionTypeMetric[]
+  aiInsight           AIInsight?
+  feedbackEntries     Feedback[]
+  recommendations     Recommendation[]
+
+  @@index([studentAssessmentId])
+  @@index([status])
+}
+
+model ChapterMetric {
+  id              String           @id @default(cuid())
+  resultId        String
+  result          AssessmentResult @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  chapterId       String
+  chapter         Chapter          @relation(fields: [chapterId], references: [id])
+  attempted       Int
+  correct         Int
+  incorrect       Int
+  marksObtained   Decimal          @db.Decimal(6, 2)
+  maxMarks        Decimal          @db.Decimal(6, 2)
+  accuracyPercent Decimal          @db.Decimal(5, 2)
+
+  @@unique([resultId, chapterId])
+  @@index([chapterId])
+}
+
+model TopicMetric {
+  id              String           @id @default(cuid())
+  resultId        String
+  result          AssessmentResult @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  topicId         String
+  topic           Topic            @relation(fields: [topicId], references: [id])
+  attempted       Int
+  correct         Int
+  incorrect       Int
+  marksObtained   Decimal          @db.Decimal(6, 2)
+  maxMarks        Decimal          @db.Decimal(6, 2)
+  accuracyPercent Decimal          @db.Decimal(5, 2)
+
+  @@unique([resultId, topicId])
+  @@index([topicId])
+}
+
+model SkillMetric {
+  id              String           @id @default(cuid())
+  resultId        String
+  result          AssessmentResult @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  skill           QuestionSkill
+  attempted       Int
+  correct         Int
+  incorrect       Int
+  marksObtained   Decimal          @db.Decimal(6, 2)
+  maxMarks        Decimal          @db.Decimal(6, 2)
+  accuracyPercent Decimal          @db.Decimal(5, 2)
+
+  @@unique([resultId, skill])
+}
+
+model CognitiveMetric {
+  id              String           @id @default(cuid())
+  resultId        String
+  result          AssessmentResult @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  level           CognitiveLevel
+  attempted       Int
+  correct         Int
+  incorrect       Int
+  marksObtained   Decimal          @db.Decimal(6, 2)
+  maxMarks        Decimal          @db.Decimal(6, 2)
+  accuracyPercent Decimal          @db.Decimal(5, 2)
+
+  @@unique([resultId, level])
+}
+
+model QuestionTypeMetric {
+  id                 String           @id @default(cuid())
+  resultId           String
+  result             AssessmentResult @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  type               QuestionType
+  attempted          Int
+  correct            Int
+  incorrect          Int
+  averageTimeSeconds Int
+  accuracyPercent    Decimal          @db.Decimal(5, 2)
+
+  @@unique([resultId, type])
+}
+
+// Class/test-level aggregate, recomputed whenever a result on this
+// assessment is published — read directly by the teacher analytics page,
+// never recomputed on view.
+model AssessmentMetric {
+  id                 String     @id @default(cuid())
+  assessmentId       String     @unique
+  assessment         Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  attemptsCount      Int        @default(0)
+  completedCount     Int        @default(0)
+  averageScore       Decimal?   @db.Decimal(5, 2)
+  highestScore       Decimal?   @db.Decimal(5, 2)
+  lowestScore        Decimal?   @db.Decimal(5, 2)
+  medianScore        Decimal?   @db.Decimal(5, 2)
+  averageAccuracy    Decimal?   @db.Decimal(5, 2)
+  averageTimeSeconds Int?
+  updatedAt          DateTime   @updatedAt
+}
+
+// Per-question quality signal (spec: "is this question itself bad?") —
+// updated whenever a result touching this question is finalized.
+model QuestionMetric {
+  id                 String   @id @default(cuid())
+  questionId         String   @unique
+  question           Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  timesAttempted     Int      @default(0)
+  timesCorrect       Int      @default(0)
+  timesIncorrect     Int      @default(0)
+  timesSkipped       Int      @default(0)
+  averageTimeSeconds Int?
+  // MCQ distractor analysis: { optionId: percentSelected }.
+  optionDistribution Json?
+  updatedAt          DateTime @updatedAt
+}
+
+// The §31 AI-generated learning summary for one result. System prompt (see
+// lib/assessment/ai/insight.ts) explicitly forbids clinical/diagnostic
+// language, same technique already used in lib/ai/nvidia.ts.
+model AIInsight {
+  id                      String           @id @default(cuid())
+  resultId                String           @unique
+  result                  AssessmentResult @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  summary                 String
+  strengths               String[]         @default([])
+  weaknesses              String[]         @default([])
+  conceptGaps             String[]         @default([])
+  cognitiveGaps           String[]         @default([])
+  skillGaps               String[]         @default([])
+  timeManagementNote      String?
+  recommendations         String[]         @default([])
+  suggestedNextAssessment String?
+  teacherActionNote       String?
+  model                   String
+  generatedAt             DateTime         @default(now())
+}
+
+model Feedback {
+  id         String           @id @default(cuid())
+  resultId   String
+  result     AssessmentResult @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  scope      FeedbackScope
+  moduleId   String?
+  questionId String?
+  chapterId  String?
+  authorId   String
+  author     User             @relation(fields: [authorId], references: [id])
+  content    String
+  createdAt  DateTime         @default(now())
+
+  @@index([resultId])
+}
+
+model Recommendation {
+  id             String               @id @default(cuid())
+  studentId      String
+  student        StudentProfile       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  resultId       String?
+  result         AssessmentResult?    @relation(fields: [resultId], references: [id], onDelete: SetNull)
+  content        String
+  source         RecommendationSource @default(AI)
+  overriddenById String?
+  overriddenBy   User?                @relation(fields: [overriddenById], references: [id])
+  createdAt      DateTime             @default(now())
+
+  @@index([studentId])
+}
+
+// Cross-assessment rolling profile, one row per student, updated
+// incrementally on every result publish (not recomputed from scratch) —
+// JSON-keyed by subject/chapter/skill since those sets are open-ended.
+model StudentLearningProfile {
+  id                    String         @id @default(cuid())
+  studentId             String         @unique
+  student               StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  overallMasteryPercent Decimal?       @db.Decimal(5, 2)
+  subjectMastery        Json?
+  chapterMastery        Json?
+  skillMastery          Json?
+  cognitiveProfile      Json?
+  persistentWeakAreas   String[]       @default([])
+  improvingAreas        String[]       @default([])
+  assessmentsCompleted  Int            @default(0)
+  lastAssessmentAt      DateTime?
+  updatedAt             DateTime       @updatedAt
+}
+
+// Append-only raw event log — distinct from the generic AuditLog above
+// (which stays for teacher/admin administrative actions). Powers the §53
+// analytics pipeline and the §48 integrity/behaviour tracking.
+model AssessmentEvent {
+  id                  String              @id @default(cuid())
+  assessmentId        String
+  assessment          Assessment          @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  studentAssessmentId String?
+  studentAssessment   StudentAssessment?  @relation(fields: [studentAssessmentId], references: [id], onDelete: Cascade)
+  actorId             String
+  actor               User                @relation(fields: [actorId], references: [id])
+  type                AssessmentEventType
+  payload             Json?
+  createdAt           DateTime            @default(now())
+
+  @@index([assessmentId, createdAt])
+  @@index([studentAssessmentId])
 }

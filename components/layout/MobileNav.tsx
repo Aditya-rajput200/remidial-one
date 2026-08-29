@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { X } from "lucide-react";
-import { primaryNav } from "@/lib/content/nav";
+import { X, UserPlus } from "lucide-react";
+import { primaryNav, moreNav } from "@/lib/content/nav";
 import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/layout/Logo";
 import { useSession } from "@/lib/auth/SessionProvider";
@@ -51,21 +51,23 @@ export function MobileNav({
         </div>
 
         <nav className="flex flex-col gap-1">
-          {primaryNav.map((link) => (
+          {[...primaryNav, ...moreNav].map((link) => (
             <Link
               key={link.href}
               href={link.href}
               onClick={onClose}
-              className="rounded-lg px-3 py-3 text-base font-medium text-ink hover:bg-surface"
+              className="flex items-center gap-3 rounded-lg px-3 py-3 text-base font-medium text-ink hover:bg-surface"
             >
+              <link.icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
               {link.label}
             </Link>
           ))}
           <Link
             href="/become-a-mentor"
             onClick={onClose}
-            className="rounded-lg px-3 py-3 text-base font-medium text-muted hover:bg-surface"
+            className="flex items-center gap-3 rounded-lg px-3 py-3 text-base font-medium text-muted hover:bg-surface"
           >
+            <UserPlus className="h-5 w-5" strokeWidth={1.75} aria-hidden />
             Become a Mentor
           </Link>
         </nav>

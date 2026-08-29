@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { UnauthenticatedError, ForbiddenError } from "@/lib/auth/errors";
 import { RateLimitedError } from "@/lib/security/rate-limit";
+import { StructureLockedError } from "@/lib/assessment/lifecycle";
+import { AttemptStateError } from "@/lib/assessment/errors";
 
 /**
  * Converts a thrown error from a route handler into a safe JSON response.
@@ -22,6 +24,12 @@ export function errorResponse(error: unknown): NextResponse {
   }
   if (error instanceof RateLimitedError) {
     return NextResponse.json({ error: error.message }, { status: 429 });
+  }
+  if (error instanceof StructureLockedError) {
+    return NextResponse.json({ error: error.message }, { status: error.status });
+  }
+  if (error instanceof AttemptStateError) {
+    return NextResponse.json({ error: error.message }, { status: error.status });
   }
 
   console.error(error);

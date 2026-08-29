@@ -10,6 +10,16 @@ export const generalFaqs: Faq[] = [
       "Remedial One is a 1-to-1 personalized learning platform that connects students with qualified mentors for academic subjects, exam preparation, and skills beyond the classroom — communication, personality development, and more.",
   },
   {
+    question: "What is remedial education?",
+    answer:
+      "Remedial education means identifying the specific concepts or skills a student hasn't fully grasped — their learning gaps — and giving them focused, personalized support to close those gaps, rather than repeating an entire subject from the start.",
+  },
+  {
+    question: "What is a learning gap assessment, and how does it work?",
+    answer:
+      "A learning gap assessment is a short, topic-level student assessment that shows exactly which chapters or concepts need attention. Mentors use the results to build a personalized learning plan instead of teaching a generic, one-size-fits-all lesson.",
+  },
+  {
     question: "How is this different from a coaching class?",
     answer:
       "There are no batches or fixed groups. Every session is one mentor and one student, paced around how that student actually learns — not a syllabus timetable built for a room full of people.",

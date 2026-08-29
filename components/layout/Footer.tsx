@@ -25,8 +25,9 @@ export function Footer() {
                     <li key={link.href}>
                       <Link
                         href={link.href}
-                        className="text-sm text-muted transition-colors duration-200 hover:text-ink"
+                        className="flex items-center gap-2 text-sm text-muted transition-colors duration-200 hover:text-ink"
                       >
+                        <link.icon className="h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden />
                         {link.label}
                       </Link>
                     </li>

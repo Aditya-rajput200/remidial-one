@@ -51,8 +51,47 @@ export function organizationJsonLd() {
     name: SITE_NAME,
     url: SITE_URL,
     description:
-      "Remedial One is a global 1-to-1 personalized learning and mentorship platform connecting students with qualified mentors.",
+      "Remedial One is a global 1-to-1 personalized learning and mentorship platform that helps students close learning gaps through assessment-led, remedial education with qualified mentors.",
     slogan: SITE_TAGLINE,
+  };
+}
+
+export function websiteJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: SITE_NAME,
+    url: SITE_URL,
+    description: SITE_TAGLINE,
+    publisher: {
+      "@type": "EducationalOrganization",
+      name: SITE_NAME,
+    },
+  };
+}
+
+export function serviceJsonLd(input: {
+  name: string;
+  description: string;
+  path: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    serviceType: input.name,
+    name: input.name,
+    description: input.description,
+    url: `${SITE_URL}${input.path}`,
+    provider: {
+      "@type": "EducationalOrganization",
+      name: SITE_NAME,
+      url: SITE_URL,
+    },
+    areaServed: "Worldwide",
+    audience: {
+      "@type": "EducationalAudience",
+      educationalRole: "student",
+    },
   };
 }
 
@@ -81,6 +120,29 @@ export function faqJsonLd(faqs: { question: string; answer: string }[]) {
         text: faq.answer,
       },
     })),
+  };
+}
+
+export function articleJsonLd(input: {
+  title: string;
+  description: string;
+  path: string;
+  authorName: string;
+  publishedAt: string;
+  updatedAt: string;
+  imageUrl?: string | null;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: input.title,
+    description: input.description,
+    url: `${SITE_URL}${input.path}`,
+    datePublished: input.publishedAt,
+    dateModified: input.updatedAt,
+    image: input.imageUrl ?? undefined,
+    author: { "@type": "Person", name: input.authorName },
+    publisher: { "@type": "EducationalOrganization", name: SITE_NAME },
   };
 }
 

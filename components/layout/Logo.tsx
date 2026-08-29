@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/cn";
 
 export function Logo({ className, dark = false }: { className?: string; dark?: boolean }) {
@@ -13,11 +14,17 @@ export function Logo({ className, dark = false }: { className?: string; dark?: b
     >
       <span
         className={cn(
-          "flex h-8 w-8 items-center justify-center rounded-lg",
-          dark ? "bg-white/10 text-lime" : "bg-ink text-lime"
+          "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+          dark && "bg-white/10 p-1"
         )}
       >
-        <span className="text-sm font-bold">R1</span>
+        <Image
+          src="/web-app-manifest-192x192.png"
+          alt=""
+          width={192}
+          height={192}
+          className="h-full w-full object-contain"
+        />
       </span>
       <span>
         REMEDIAL <span className={dark ? "text-lime" : "text-lime-ink"}>ONE</span>

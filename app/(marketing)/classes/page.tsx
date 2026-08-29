@@ -19,6 +19,7 @@ export default function ClassesPage() {
         <Breadcrumbs items={[{ name: "Home", path: "/" }, { name: "Classes", path: "/classes" }]} />
         <div className="mt-6">
           <SectionHeading
+            as="h1"
             eyebrow="Classes"
             title="Learning built for every stage."
             description="From foundation years to board-exam preparation, find the learning path that matches where you are right now."

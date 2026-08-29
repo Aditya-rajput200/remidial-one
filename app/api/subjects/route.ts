@@ -7,7 +7,7 @@ export async function GET() {
     const subjects = await prisma.subject.findMany({
       where: { isPublished: true },
       orderBy: { name: "asc" },
-      select: { slug: true, name: true, shortDescription: true, icon: true },
+      select: { id: true, slug: true, name: true, shortDescription: true, icon: true },
     });
     return NextResponse.json({ subjects });
   } catch (error) {

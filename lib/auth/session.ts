@@ -3,7 +3,7 @@
 // lib/auth/SessionProvider.tsx. This file only holds shapes shared with
 // client components.
 
-export type Role = "student" | "mentor" | "parent" | "admin" | "super_admin";
+export type Role = "student" | "mentor" | "parent" | "admin" | "super_admin" | "content_manager";
 
 export type Session = {
   id: string;
@@ -15,7 +15,7 @@ export type Session = {
   emailVerifiedAt: string | null;
 };
 
-export type ApiRole = "STUDENT" | "MENTOR" | "PARENT" | "ADMIN" | "SUPER_ADMIN";
+export type ApiRole = "STUDENT" | "MENTOR" | "PARENT" | "ADMIN" | "SUPER_ADMIN" | "CONTENT_MANAGER";
 
 const API_TO_CLIENT_ROLE: Record<ApiRole, Role> = {
   STUDENT: "student",
@@ -23,6 +23,7 @@ const API_TO_CLIENT_ROLE: Record<ApiRole, Role> = {
   PARENT: "parent",
   ADMIN: "admin",
   SUPER_ADMIN: "super_admin",
+  CONTENT_MANAGER: "content_manager",
 };
 
 export function dashboardPathForRole(role: Role): string {
@@ -33,6 +34,7 @@ export function dashboardPathForRole(role: Role): string {
       return "/parent/dashboard";
     case "admin":
     case "super_admin":
+    case "content_manager":
       return "/admin";
     default:
       return "/student/dashboard";

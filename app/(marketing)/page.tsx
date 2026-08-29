@@ -12,6 +12,10 @@ import {
   UsersRound,
   ArrowRight,
   BarChart3,
+  ClipboardList,
+  Search,
+  TrendingUp,
+  CalendarCheck,
 } from "lucide-react";
 import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -39,9 +43,9 @@ import { buildMetadata } from "@/lib/seo";
 import { publicAsset } from "@/lib/assets";
 
 export const metadata = buildMetadata({
-  title: "Remedial One — One Student. One Mentor. One Learning Journey.",
+  title: "Remedial One — Personalized 1-to-1 Remedial Learning & Mentorship",
   description:
-    "Personalized 1-to-1 learning from qualified mentors. Academic subjects, exam preparation, and skills beyond the classroom — paced around how you actually learn.",
+    "Remedial One is a personalized learning platform that uses learning gap assessments to match students with qualified 1-to-1 mentors — for remedial education, exam preparation, and skills beyond the classroom.",
   path: "/",
 });
 
@@ -54,7 +58,7 @@ const heroFeatures = [
 
 const trustPoints = [
   { icon: GraduationCap, label: "Qualified Mentors", description: "Every mentor is reviewed before they teach." },
-  { icon: Target, label: "Personalized Learning", description: "Sessions built around your goals and pace." },
+  { icon: Target, label: "Personalized Learning", description: "Sessions built around your goals, pace, and learning gaps." },
   { icon: Clock, label: "Flexible Sessions", description: "Book hours that actually fit your schedule." },
   { icon: ShieldCheck, label: "Safe Environment", description: "Verified mentors and responsible session design." },
   { icon: Globe2, label: "Global Accessibility", description: "Built to learn from anywhere, in any time zone." },
@@ -72,6 +76,24 @@ const comparisonRemedial = [
   "Learning paced to how you understand",
   "Personalized, goal-based sessions",
   "Flexible scheduling that fits your life",
+];
+
+const assessmentSteps = [
+  {
+    icon: Search,
+    title: "Identify learning gaps",
+    description: "Chapter- and topic-level assessments pinpoint exactly which concepts a student hasn't fully grasped yet — not just which subject.",
+  },
+  {
+    icon: ClipboardList,
+    title: "Get a personalized learning plan",
+    description: "Mentors evaluate results and focus sessions on the specific gaps the assessment surfaces, instead of re-teaching an entire syllabus.",
+  },
+  {
+    icon: TrendingUp,
+    title: "Track progress over time",
+    description: "Chapter, topic, and skill-level metrics update as students improve, so growth is visible in the dashboard, not just felt.",
+  },
 ];
 
 const tuitionHighlights = [
@@ -133,11 +155,11 @@ export default function HomePage() {
 
         <div className="relative grid gap-10 lg:grid-cols-12 lg:items-center lg:gap-6">
           {/* Text column */}
-          <div className="flex flex-col items-start gap-6 lg:col-span-5">
+          <div className="flex w-full min-w-0 flex-col items-start gap-5 sm:gap-6 lg:col-span-5">
             <Badge tone="outline-lime" dot>
               Personalized 1-to-1 Learning
             </Badge>
-            <h1 className="max-w-[680px] text-[clamp(2.75rem,5vw,4.75rem)] font-semibold leading-[0.98] tracking-tight text-ink">
+            <h1 className="max-w-[680px] text-[clamp(2.25rem,8vw,4.75rem)] font-semibold leading-[1.05] tracking-tight text-ink sm:leading-[1] lg:leading-[0.98]">
               <span className="text-lime-ink">One</span> Student.
               <br />
               <span className="text-lime-ink">One</span> Mentor.
@@ -167,21 +189,25 @@ export default function HomePage() {
                 </svg>
               </span>
             </h1>
-            <p className="max-w-[560px] text-base leading-relaxed text-muted sm:text-lg">
-              Personalized learning that adapts to you. Learn better. Grow smarter. Achieve more.
+            <p className="max-w-[560px] text-sm leading-relaxed text-muted sm:text-base lg:text-lg">
+              Personalized learning that identifies your learning gaps and adapts to you. Learn better. Grow smarter. Achieve more.
             </p>
-            <div className="flex flex-wrap gap-3 pt-1">
-              <Button href="/mentors" variant="primary-black" size="lg" className="gap-2">
+            <div className="flex w-full flex-col gap-3 pt-1 sm:flex-row sm:flex-wrap">
+              <Button href="/mentors" variant="primary-black" size="lg" className="w-full gap-2 sm:w-auto">
                 Find Your Mentor
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </Button>
-              <Button href="/one-to-one-tuition" variant="secondary-outline" size="lg" className="gap-2">
+              <Button href="/one-to-one-tuition" variant="secondary-outline" size="lg" className="w-full gap-2 sm:w-auto">
                 Explore Learning
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </Button>
+              <Button href="/book-counselling" variant="primary-lime" size="lg" className="w-full gap-2 sm:w-auto">
+                <CalendarCheck className="h-4 w-4" aria-hidden />
+                Book Free Counselling
+              </Button>
             </div>
 
-            <div className="grid grid-cols-4 gap-x-4 gap-y-5 pt-2">
+            <div className="grid w-full grid-cols-2 gap-x-4 gap-y-5 pt-2 sm:grid-cols-4">
               {heroFeatures.map((feature) => (
                 <div key={feature.label} className="relative flex flex-col items-start gap-2">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-lime-soft text-lime-ink">
@@ -269,70 +295,6 @@ export default function HomePage() {
             </div>
 
             <Image
-              src="/images/hero/bulb.png"
-              alt=""
-              width={1167}
-              height={1347}
-              className="pointer-events-none absolute left-3 -top-3 w-12 sm:left-8 sm:-top-8 sm:w-20 lg:left-12 lg:-top-10 lg:w-24"
-              aria-hidden
-            />
-            <Image
-              src="/images/hero/sixth.png"
-              alt=""
-              width={1536}
-              height={1024}
-              className="pointer-events-none absolute right-2 -top-4 hidden w-24 -rotate-6 sm:block sm:right-6 sm:w-28 lg:right-10 lg:w-32"
-              aria-hidden
-            />
-            <Image
-              src="/images/hero/one.png"
-              alt=""
-              width={1536}
-              height={1024}
-              className="pointer-events-none absolute -left-6 top-16 hidden w-24 -rotate-3 sm:block sm:-left-10 sm:w-28 lg:-left-14 lg:w-32"
-              aria-hidden
-            />
-            <Image
-              src="/images/hero/fifth.png"
-              alt=""
-              width={416}
-              height={400}
-              className="pointer-events-none absolute -right-6 top-[28%] hidden w-16 rotate-6 sm:block sm:-right-10 sm:w-20 lg:w-24"
-              aria-hidden
-            />
-            <Image
-              src="/images/hero/arrow-cut.png"
-              alt=""
-              width={1536}
-              height={1024}
-              className="pointer-events-none absolute right-16 top-10 hidden w-16 -rotate-12 sm:block sm:right-20 sm:w-20 lg:right-24 lg:w-28"
-              aria-hidden
-            />
-            <Image
-              src="/images/hero/three.png"
-              alt=""
-              width={500}
-              height={220}
-              className="pointer-events-none absolute -left-8 bottom-[32%] hidden w-20 sm:block lg:-left-12 lg:w-24"
-              aria-hidden
-            />
-            <Image
-              src="/images/hero/two.png"
-              alt=""
-              width={1536}
-              height={1024}
-              className="pointer-events-none absolute -left-2 bottom-14 hidden w-24 rotate-2 sm:block sm:-left-4 sm:w-28 lg:w-32"
-              aria-hidden
-            />
-            <Image
-              src="/images/hero/four.png"
-              alt=""
-              width={1536}
-              height={1024}
-              className="pointer-events-none absolute bottom-10 -right-4 hidden w-20 sm:block sm:-right-8 sm:w-24 lg:w-28"
-              aria-hidden
-            />
-            <Image
               src="/images/hero/doted.png"
               alt=""
               width={1536}
@@ -356,6 +318,7 @@ export default function HomePage() {
                 label="Add student.png"
                 recommendedSize="~1000×1300, transparent PNG"
                 fit="contain"
+                priority
                 className="relative aspect-[1224/1285] w-full"
               />
             </div>
@@ -429,6 +392,37 @@ export default function HomePage() {
         </div>
       </Section>
 
+      {/* Learning gap assessment */}
+      <Section tone="surface">
+        <ScrollReveal>
+          <SectionHeading
+            eyebrow="Learning Gap Assessment"
+            title="Every learning journey starts with knowing where you stand."
+            description="Before a mentor teaches, Remedial One's assessment engine helps identify learning gaps at the chapter and topic level — so remedial support targets exactly what a student needs, not a generic revision of the whole syllabus."
+          />
+        </ScrollReveal>
+        <div className="mt-10 grid gap-6 sm:grid-cols-3">
+          {assessmentSteps.map((step, index) => (
+            <ScrollReveal
+              key={step.title}
+              delay={index * 80}
+              className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-6"
+            >
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-lime-soft text-ink">
+                <step.icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
+              </div>
+              <h3 className="text-base font-semibold text-ink">{step.title}</h3>
+              <p className="text-sm leading-relaxed text-muted">{step.description}</p>
+            </ScrollReveal>
+          ))}
+        </div>
+        <div className="mt-10 flex justify-center">
+          <Button href="/one-to-one-tuition#how-it-works" variant="secondary-outline" size="lg">
+            See How Assessments Work
+          </Button>
+        </div>
+      </Section>
+
       {/* Promo banner — learn from anywhere */}
       <Section className="py-10 sm:py-12">
         <ScrollReveal>
@@ -437,7 +431,7 @@ export default function HomePage() {
             title="Your mentor, wherever you are."
             description="Sessions happen in a dedicated online learning room — no commute, no fixed location. Just you, your mentor, and a focused hour built around your goals."
             ctaLabel="See How Sessions Work"
-            ctaHref="/how-it-works"
+            ctaHref="/one-to-one-tuition#how-it-works"
             imageSide="right"
           />
         </ScrollReveal>
@@ -508,7 +502,7 @@ export default function HomePage() {
           ))}
         </div>
         <div className="mt-10 flex justify-center">
-          <Button href="/subjects" variant="secondary-outline" size="lg">
+          <Button href="/one-to-one-tuition#subjects" variant="secondary-outline" size="lg">
             View All Subjects
           </Button>
         </div>
@@ -581,7 +575,7 @@ export default function HomePage() {
           ))}
         </div>
         <div className="mt-10 flex justify-center">
-          <Button href="/skills" variant="primary-lime" size="lg">
+          <Button href="/one-to-one-tuition#skills" variant="primary-lime" size="lg">
             Explore Skills
           </Button>
         </div>
@@ -616,9 +610,9 @@ export default function HomePage() {
       <Section className="py-10 sm:py-12">
         <ScrollReveal>
           <PromoBanner
-            eyebrow="For Parents"
+            eyebrow="Parent Dashboard"
             title="Visibility into every step of the journey."
-            description="See session history, mentor feedback, and subject-wise progress — so you always know how learning is actually going, not just what the report card says."
+            description="The parent dashboard shows session history, mentor feedback, and subject-wise progress against identified learning gaps — so you always know how learning is actually going, not just what the report card says."
             ctaLabel="Learn More"
             ctaHref="/about"
             imageSide="left"

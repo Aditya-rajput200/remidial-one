@@ -36,6 +36,7 @@ export default function BecomeAMentorPage() {
         <Breadcrumbs items={[{ name: "Home", path: "/" }, { name: "Become a Mentor", path: "/become-a-mentor" }]} />
         <div className="mt-6">
           <SectionHeading
+            as="h1"
             eyebrow="Become a Mentor"
             title="Teach What You Know. Inspire What Comes Next."
             description="Remedial One is built around genuine 1-to-1 mentorship. If you have the qualifications, subject expertise, or teaching experience, we'd love to have you as one of our first mentors."

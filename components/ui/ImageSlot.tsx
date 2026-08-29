@@ -8,6 +8,7 @@ export function ImageSlot({
   label = "Image placeholder",
   recommendedSize,
   fit = "cover",
+  priority = false,
   className,
 }: {
   src?: string;
@@ -15,6 +16,7 @@ export function ImageSlot({
   label?: string;
   recommendedSize?: string;
   fit?: "cover" | "contain";
+  priority?: boolean;
   className?: string;
 }) {
   if (src) {
@@ -24,6 +26,7 @@ export function ImageSlot({
           src={src}
           alt={alt}
           fill
+          priority={priority}
           className={fit === "contain" ? "object-contain" : "object-cover"}
         />
       </div>

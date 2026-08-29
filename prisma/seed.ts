@@ -117,11 +117,68 @@ async function seedSubjectsAndGrades() {
   console.log(`Seeded ${subjectContent.length} subjects and ${classBands.length} grades.`);
 }
 
+// Starter chapter/topic catalog so the assessment builder has real data to
+// classify questions against out of the box — mentors/admins can add more
+// inline while building a test. Attributed to the seeded super admin (a real
+// User row is required by Chapter/Topic.createdById); skipped gracefully if
+// that account doesn't exist yet.
+const CHAPTER_CATALOG: Record<string, { name: string; topics: string[] }[]> = {
+  mathematics: [
+    { name: "Algebra", topics: ["Linear Equations", "Quadratic Equations", "Polynomials"] },
+    { name: "Geometry", topics: ["Triangles", "Circles", "Coordinate Geometry"] },
+    { name: "Numbers", topics: ["Fractions", "Decimals", "Ratio and Proportion"] },
+  ],
+  physics: [
+    { name: "Mechanics", topics: ["Motion", "Force and Laws of Motion", "Work and Energy"] },
+    { name: "Electricity", topics: ["Current Electricity", "Circuits", "Magnetic Effects"] },
+  ],
+  chemistry: [
+    { name: "Chemical Reactions", topics: ["Types of Reactions", "Balancing Equations"] },
+    { name: "Atomic Structure", topics: ["Atoms and Molecules", "Periodic Table"] },
+  ],
+};
+
+async function seedChaptersAndTopics() {
+  const email = (process.env.SEED_SUPER_ADMIN_EMAIL ?? "superadmin@remedial.one").toLowerCase();
+  const admin = await prisma.user.findUnique({ where: { email } });
+  if (!admin) {
+    console.warn("No seeded super admin found — skipping chapter/topic catalog seed.");
+    return;
+  }
+
+  let chapterCount = 0;
+  let topicCount = 0;
+  for (const [subjectSlug, chapters] of Object.entries(CHAPTER_CATALOG)) {
+    const subject = await prisma.subject.findUnique({ where: { slug: subjectSlug } });
+    if (!subject) continue;
+
+    for (const [index, chapterDef] of chapters.entries()) {
+      const chapter = await prisma.chapter.upsert({
+        where: { subjectId_name: { subjectId: subject.id, name: chapterDef.name } },
+        update: {},
+        create: { subjectId: subject.id, name: chapterDef.name, order: index, createdById: admin.id },
+      });
+      chapterCount += 1;
+
+      for (const [topicIndex, topicName] of chapterDef.topics.entries()) {
+        await prisma.topic.upsert({
+          where: { chapterId_name: { chapterId: chapter.id, name: topicName } },
+          update: {},
+          create: { chapterId: chapter.id, name: topicName, order: topicIndex, createdById: admin.id },
+        });
+        topicCount += 1;
+      }
+    }
+  }
+  console.log(`Seeded ${chapterCount} chapters and ${topicCount} topics.`);
+}
+
 async function main() {
   await seedPermissions();
   await seedRolePermissions();
   await seedSuperAdmin();
   await seedSubjectsAndGrades();
+  await seedChaptersAndTopics();
 }
 
 main()

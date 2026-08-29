@@ -93,7 +93,7 @@ export default async function SubjectPage(props: PageProps<"/subjects/[subject]"
             <Button href="/mentors" variant="primary-lime" size="lg">
               Find a {subject.name} Mentor
             </Button>
-            <Button href="/how-it-works" variant="secondary-outline" size="lg">
+            <Button href="/one-to-one-tuition#how-it-works" variant="secondary-outline" size="lg">
               How Sessions Work
             </Button>
           </div>
