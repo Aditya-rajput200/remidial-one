@@ -1,9 +1,9 @@
-import { Mail, MapPin } from "lucide-react";
+import { Mail, MapPin, Phone } from "lucide-react";
 import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ContactForm } from "@/components/forms/ContactForm";
-import { buildMetadata } from "@/lib/seo";
+import { buildMetadata, SITE_EMAIL, SITE_PHONE, SITE_PHONE_DISPLAY } from "@/lib/seo";
 
 export const metadata = buildMetadata({
   title: "Contact Us — Free Guidance for Students & Parents",
@@ -34,7 +34,18 @@ export default function ContactPage() {
               <Mail className="mt-0.5 h-5 w-5 text-ink" aria-hidden />
               <div>
                 <p className="text-sm font-semibold text-ink">Email</p>
-                <p className="text-sm text-muted">hello@remedialone.com</p>
+                <a href={`mailto:${SITE_EMAIL}`} className="text-sm text-muted hover:text-ink">
+                  {SITE_EMAIL}
+                </a>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <Phone className="mt-0.5 h-5 w-5 text-ink" aria-hidden />
+              <div>
+                <p className="text-sm font-semibold text-ink">Phone</p>
+                <a href={`tel:${SITE_PHONE}`} className="text-sm text-muted hover:text-ink">
+                  {SITE_PHONE_DISPLAY}
+                </a>
               </div>
             </div>
             <div className="flex items-start gap-3">

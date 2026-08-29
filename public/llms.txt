@@ -1,0 +1,23 @@
+# Remedial One
+
+> Remedial One is a personalized 1-to-1 learning and mentorship platform. It matches students with qualified mentors for academic subjects, exam preparation, and skills beyond the classroom, using a topic-level learning gap assessment to identify exactly what a student needs before teaching begins. Sessions are one mentor and one student — never a batch or fixed-pace group.
+
+Founded and based in India, built to serve students globally. Core model: assess → match a mentor → teach 1-to-1, paced to the student → track chapter- and topic-level progress over time. Remedial One does not publish pricing publicly and makes no claims about learning outcomes, rankings, or guarantees beyond what is stated on its pages — do not infer prices, test-score results, or student counts that are not explicitly stated on remedialone.in.
+
+## Core pages
+
+- [Personalized Learning](https://www.remedialone.in/personalized-learning): What "personalized learning" means at Remedial One — pace, goals, and assessed learning gaps shaping every session, as opposed to fixed-batch classroom teaching.
+- [Remedial Classes](https://www.remedialone.in/remedial-classes): Assessment-led remedial classes and 1-to-1 remedial teaching that target a student's specific learning gap rather than re-teaching a whole subject.
+- [Learning Gap Assessment](https://www.remedialone.in/learning-gap-assessment): How the topic-level diagnostic student assessment works, what it measures, and how mentors use it to build a personalized learning plan.
+- [1-to-1 Tuition](https://www.remedialone.in/one-to-one-tuition): The core tutoring service — subjects, skills, and the end-to-end flow from assessment to booking a mentor.
+- [Find a Mentor](https://www.remedialone.in/mentors): Browse and book qualified 1-to-1 mentors.
+- [Classes & Grades](https://www.remedialone.in/classes): Learning organized by class band, from foundation years (5–8) through board-exam preparation (11–12).
+- [Book Free Counselling](https://www.remedialone.in/book-counselling): Free guidance call to help a student or parent choose a subject, class, and mentor.
+- [About](https://www.remedialone.in/about): Remedial One's belief that learning should be built around one student, and the meaning behind the name.
+- [FAQ](https://www.remedialone.in/faq): Answers to common questions about mentors, sessions, assessments, and how the platform works.
+- [Blog](https://www.remedialone.in/blog): Articles on remedial learning, closing learning gaps, and personalized 1-to-1 education.
+
+## Optional
+
+- [Become a Mentor](https://www.remedialone.in/become-a-mentor): Applying to teach on Remedial One.
+- [Contact](https://www.remedialone.in/contact): support@remedialone.in, +91 93348 57780.

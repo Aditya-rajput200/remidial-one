@@ -54,6 +54,12 @@ const subNav = [
   { href: "#resources", label: "Resources" },
 ];
 
+const relatedPages = [
+  { href: "/personalized-learning", label: "What personalized learning means here" },
+  { href: "/learning-gap-assessment", label: "How the learning gap assessment works" },
+  { href: "/remedial-classes", label: "Remedial classes for a specific gap" },
+];
+
 const flow = [
   { icon: Search, title: "Select a subject & class", description: "Start with what you want to learn and your current class level." },
   { icon: UserRoundSearch, title: "Discover a mentor", description: "Browse mentor profiles matched to your subject and goals." },
@@ -179,6 +185,17 @@ export default function OneToOneTuitionPage() {
               <h3 className="text-xl font-semibold text-ink">{resource.title}</h3>
               <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">{resource.body}</p>
             </article>
+          ))}
+        </div>
+        <div className="mx-auto mt-8 flex max-w-3xl flex-wrap gap-x-6 gap-y-2">
+          {relatedPages.map((page) => (
+            <Link
+              key={page.href}
+              href={page.href}
+              className="text-sm font-semibold text-ink underline underline-offset-4"
+            >
+              {page.label} →
+            </Link>
           ))}
         </div>
       </Section>

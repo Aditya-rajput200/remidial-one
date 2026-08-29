@@ -15,7 +15,6 @@ import {
   ClipboardList,
   Search,
   TrendingUp,
-  CalendarCheck,
 } from "lucide-react";
 import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -43,7 +42,7 @@ import { buildMetadata } from "@/lib/seo";
 import { publicAsset } from "@/lib/assets";
 
 export const metadata = buildMetadata({
-  title: "Remedial One — Personalized 1-to-1 Remedial Learning & Mentorship",
+  title: "Personalized 1-to-1 Learning, Remedial Classes & Mentorship",
   description:
     "Remedial One is a personalized learning platform that uses learning gap assessments to match students with qualified 1-to-1 mentors — for remedial education, exam preparation, and skills beyond the classroom.",
   path: "/",
@@ -136,7 +135,7 @@ export default function HomePage() {
       {/* Hero */}
       <Section
         tone="surface"
-        className="relative overflow-x-clip pt-8 pb-10 sm:pt-10 sm:pb-12 lg:pt-12 lg:pb-16"
+        className="relative overflow-x-clip pt-6 pb-8 sm:pt-8 sm:pb-10 lg:pt-5 lg:pb-6"
         containerClassName="max-w-[1760px] px-5 sm:px-8 lg:px-[6%] xl:px-[8%] 2xl:px-[9%]"
       >
         {/* Ambient corner glows — section-wide, behind all content */}
@@ -201,16 +200,12 @@ export default function HomePage() {
                 Explore Learning
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </Button>
-              <Button href="/book-counselling" variant="primary-lime" size="lg" className="w-full gap-2 sm:w-auto">
-                <CalendarCheck className="h-4 w-4" aria-hidden />
-                Book Free Counselling
-              </Button>
             </div>
 
             <div className="grid w-full grid-cols-2 gap-x-4 gap-y-5 pt-2 sm:grid-cols-4">
               {heroFeatures.map((feature) => (
                 <div key={feature.label} className="relative flex flex-col items-start gap-2">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-lime-soft text-lime-ink">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-lime-soft text-ink">
                     <feature.icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
                   </div>
                   <span className="text-xs font-medium leading-tight text-muted">
@@ -249,29 +244,6 @@ export default function HomePage() {
 
           {/* Photo column */}
           <div className="relative flex items-center justify-center py-4 lg:col-span-7 lg:py-0">
-            {/* Outer, lighter halo circle — pulled well clear of the lower green elements below */}
-            <div
-              className="pointer-events-none absolute inset-0 flex -translate-y-10 items-center justify-center sm:-translate-y-14 lg:-translate-y-16"
-              aria-hidden
-            >
-              <div className="h-[92%] w-[92%] max-h-[480px] max-w-[480px] rounded-full bg-lime-soft opacity-60 lg:max-h-[540px] lg:max-w-[540px]" />
-            </div>
-            <div
-              className="pointer-events-none absolute inset-0 flex -translate-y-10 items-center justify-center sm:-translate-y-14 lg:-translate-y-16"
-              aria-hidden
-            >
-              <div className="h-[82%] w-[82%] max-h-[420px] max-w-[420px] rounded-full border-2 border-dashed border-lime-ink/25 lg:max-h-[460px] lg:max-w-[460px]" />
-            </div>
-            {/* Inner circle for depth — a plain CSS circle (not bgRounded.png)
-                so there's no square image-bounds artifact peeking past the
-                round rings above it. */}
-            <div
-              className="pointer-events-none absolute inset-0 flex -translate-y-10 items-center justify-center sm:-translate-y-14 lg:-translate-y-16"
-              aria-hidden
-            >
-              <div className="h-[52%] w-[52%] max-h-[280px] max-w-[280px] rounded-full bg-lime opacity-35 lg:max-h-[310px] lg:max-w-[310px]" />
-            </div>
-
             {/* Dot grid, rotated to a vertical strip and windowed down to a
                 center-cropped portion of the pattern (overflow-hidden crop
                 around a centered, oversized image — guaranteed to show actual
@@ -304,14 +276,19 @@ export default function HomePage() {
             />
 
             <div className="relative w-full max-w-sm translate-y-4 sm:max-w-md sm:translate-y-6 lg:max-w-xl lg:translate-y-9 xl:max-w-2xl">
-              <Image
-                src="/images/hero/lowerelements.png"
-                alt=""
-                width={2038}
-                height={772}
-                className="pointer-events-none absolute -bottom-6 left-1/2 h-auto w-[132%] max-w-none -translate-x-1/2 sm:-bottom-10 lg:-bottom-12"
+              {/* Background circle cluster — anchored to the student's head
+                  (not the whole image box), so it reads as a halo behind her
+                  rather than floating in the middle of the frame. */}
+              <div
+                className="pointer-events-none absolute left-[45%] top-[19%] -translate-x-1/2 -translate-y-1/2"
                 aria-hidden
-              />
+              >
+                <div className="relative flex items-center justify-center">
+                  <div className="h-[230px] w-[230px] rounded-full bg-lime-soft opacity-60 sm:h-[300px] sm:w-[300px] lg:h-[386px] lg:w-[386px]" />
+                  <div className="absolute h-[200px] w-[200px] rounded-full border-2 border-dashed border-lime-ink/25 sm:h-[260px] sm:w-[260px] lg:h-[336px] lg:w-[336px]" />
+                  <div className="absolute h-[170px] w-[170px] rounded-full bg-lime opacity-35 sm:h-[221px] sm:w-[221px] lg:h-[286px] lg:w-[286px]" />
+                </div>
+              </div>
               <ImageSlot
                 src={publicAsset("images/hero/student.png")}
                 alt="Student learning with Remedial One"
@@ -319,7 +296,7 @@ export default function HomePage() {
                 recommendedSize="~1000×1300, transparent PNG"
                 fit="contain"
                 priority
-                className="relative aspect-[1224/1285] w-full"
+                className="relative aspect-[1224/1285] w-full [-webkit-mask-image:linear-gradient(to_bottom,black_72%,transparent_98%)] [mask-image:linear-gradient(to_bottom,black_72%,transparent_98%)]"
               />
             </div>
           </div>
@@ -390,6 +367,11 @@ export default function HomePage() {
             </ul>
           </ScrollReveal>
         </div>
+        <div className="mt-6 flex justify-center">
+          <Link href="/personalized-learning" className="text-sm font-semibold text-ink underline underline-offset-4">
+            Read more about the personalized learning approach
+          </Link>
+        </div>
       </Section>
 
       {/* Learning gap assessment */}
@@ -416,10 +398,13 @@ export default function HomePage() {
             </ScrollReveal>
           ))}
         </div>
-        <div className="mt-10 flex justify-center">
-          <Button href="/one-to-one-tuition#how-it-works" variant="secondary-outline" size="lg">
-            See How Assessments Work
+        <div className="mt-10 flex flex-col items-center gap-4">
+          <Button href="/learning-gap-assessment" variant="secondary-outline" size="lg">
+            See How the Assessment Works
           </Button>
+          <Link href="/remedial-classes" className="text-sm font-semibold text-ink underline underline-offset-4">
+            Explore remedial classes built around your gaps
+          </Link>
         </div>
       </Section>
 

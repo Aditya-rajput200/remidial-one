@@ -15,6 +15,8 @@ import {
   FolderOpen,
   ListChecks,
   HelpCircle,
+  Target,
+  ClipboardCheck,
   type LucideIcon,
 } from "lucide-react";
 
@@ -41,7 +43,9 @@ export const footerNav: { heading: string; links: NavLink[] }[] = [
     heading: "Learn",
     links: [
       { label: "1-to-1 Tuition", href: "/one-to-one-tuition", icon: GraduationCap },
-      { label: "Subjects", href: "/one-to-one-tuition#subjects", icon: BookOpen },
+      { label: "Personalized Learning", href: "/personalized-learning", icon: Target },
+      { label: "Remedial Classes", href: "/remedial-classes", icon: BookOpen },
+      { label: "Learning Gap Assessment", href: "/learning-gap-assessment", icon: ClipboardCheck },
       { label: "Skills", href: "/one-to-one-tuition#skills", icon: Sparkles },
       { label: "Classes", href: "/classes", icon: Layers },
       { label: "Knowledge & Values", href: "/knowledge", icon: Compass },

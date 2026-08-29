@@ -49,7 +49,7 @@ const sections = [
   },
   {
     title: "Contact Us",
-    body: "Questions about this policy or your data can be sent to hello@remedialone.com, or via the Contact page.",
+    body: "Questions about this policy or your data can be sent to support@remedialone.in, or via the Contact page.",
   },
 ];
 

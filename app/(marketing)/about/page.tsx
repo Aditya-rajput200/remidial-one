@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Target, Globe2, ShieldCheck, Heart } from "lucide-react";
 import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -6,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
-  title: "About Remedial One — Personalized Remedial Education",
+  title: "About Us — Our Approach to Personalized Remedial Education",
   description:
     "Remedial One is a global 1-to-1 personalized learning and mentorship platform, built to identify learning gaps and give every student the individual attention a classroom can't.",
   path: "/about",
@@ -42,9 +43,20 @@ export default function AboutPage() {
         />
         <p className="mt-6 max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
           The name Remedial One reflects that belief. Remedial education, to us, isn&apos;t a label
-          for students who are &ldquo;behind&rdquo; — it&apos;s the practice of identifying specific
-          learning gaps through assessment and closing them with a mentor who adapts to that one
-          student, one topic at a time.
+          for students who are &ldquo;behind&rdquo; — it&apos;s the practice of identifying specific{" "}
+          <Link href="/learning-gap-assessment" className="font-semibold text-ink underline underline-offset-4">
+            learning gaps through assessment
+          </Link>{" "}
+          and closing them with a mentor who adapts to that one student, one topic at a time. Read
+          more about{" "}
+          <Link href="/personalized-learning" className="font-semibold text-ink underline underline-offset-4">
+            what personalized learning
+          </Link>{" "}
+          means in practice, or see how it shapes our{" "}
+          <Link href="/remedial-classes" className="font-semibold text-ink underline underline-offset-4">
+            remedial classes
+          </Link>
+          .
         </p>
       </Section>
 

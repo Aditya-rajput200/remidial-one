@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 
 export const SITE_NAME = "Remedial One";
-export const SITE_URL = "https://www.remedialone.com";
+export const SITE_URL = "https://www.remedialone.in";
 export const SITE_TAGLINE = "One Student. One Mentor. One Learning Journey.";
+export const SITE_EMAIL = "support@remedialone.in";
+export const SITE_PHONE = "+919334857780";
+export const SITE_PHONE_DISPLAY = "+91 93348 57780";
 
 type BuildMetadataInput = {
   title: string;
@@ -53,6 +56,16 @@ export function organizationJsonLd() {
     description:
       "Remedial One is a global 1-to-1 personalized learning and mentorship platform that helps students close learning gaps through assessment-led, remedial education with qualified mentors.",
     slogan: SITE_TAGLINE,
+    email: SITE_EMAIL,
+    telephone: SITE_PHONE,
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer support",
+      email: SITE_EMAIL,
+      telephone: SITE_PHONE,
+      areaServed: "IN",
+      availableLanguage: ["English", "Hindi"],
+    },
   };
 }
 
