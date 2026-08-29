@@ -13,6 +13,7 @@ type SessionContextValue = {
   signup: (input: SignupInput) => Promise<AuthResult>;
   login: (input: LoginInput) => Promise<AuthResult>;
   logout: () => Promise<void>;
+  refreshSession: () => Promise<void>;
 };
 
 const SessionContext = createContext<SessionContextValue | null>(null);
@@ -92,8 +93,14 @@ export function SessionProvider({
     setSession(null);
   }, []);
 
+  const refreshSession = useCallback(async () => {
+    const response = await fetch("/api/auth/me");
+    const body = await response.json().catch(() => ({}));
+    setSession(body.user ? toClientSession(body.user) : null);
+  }, []);
+
   return (
-    <SessionContext.Provider value={{ session, ready, signup, login, logout }}>
+    <SessionContext.Provider value={{ session, ready, signup, login, logout, refreshSession }}>
       {children}
     </SessionContext.Provider>
   );

@@ -1,17 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { UserRound, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
+import { Avatar } from "@/components/ui/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SkeletonCardGrid } from "@/components/dashboard/DashboardSkeletons";
 
 type MentorSummary = {
   id: string;
   name: string;
+  avatarUrl: string | null;
   bio: string;
   yearsExperience: number | null;
   subjects: { slug: string; name: string }[];
@@ -79,9 +81,7 @@ export default function FindMentorsPage() {
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {mentors.map((mentor) => (
             <Card key={mentor.id} interactive className="flex flex-col gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-surface text-muted-2">
-                <UserRound className="h-7 w-7" strokeWidth={1.5} aria-hidden />
-              </div>
+              <Avatar src={mentor.avatarUrl} alt={mentor.name} size="md" className="border-0" />
               <div className="flex flex-col gap-1">
                 <h3 className="text-lg font-semibold text-ink">{mentor.name}</h3>
                 <p className="text-sm text-muted">{mentor.subjects.map((s) => s.name).join(", ")}</p>

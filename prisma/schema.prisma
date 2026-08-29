@@ -1,8 +1,14 @@
 // Remedial One — core schema.
 // Phase 2: Auth + RBAC + user profiles.
 // Phase 4: Subjects, grades, mentor discovery, availability, booking.
-// Video/CMS/payments models are added in later phases per the project's
-// phased implementation order — do not add them here speculatively.
+// Phase 5 (partial): Live-session whiteboard (Whiteboard / WhiteboardPage /
+// WhiteboardObject / WhiteboardOperation / WhiteboardSnapshot /
+// WhiteboardParticipant below) — the first of the deferred video/CMS/payments
+// models to land, because it's part of the same live classroom room as
+// video. Note (below) is the first real slice of the deferred "resource
+// library" — a mentor-uploaded file scoped to one Booking. Recording, chat,
+// assignments, and payments models are still deferred — do not add them
+// here speculatively.
 
 generator client {
   provider = "prisma-client"
@@ -59,6 +65,45 @@ enum BookingStatus {
   NO_SHOW
 }
 
+enum WhiteboardObjectType {
+  PATH
+  LINE
+  ARROW
+  RECTANGLE
+  ELLIPSE
+  TRIANGLE
+  TEXT
+  STICKY_NOTE
+  EQUATION
+  IMAGE
+}
+
+enum WhiteboardOperationType {
+  OBJECT_CREATE
+  OBJECT_UPDATE
+  OBJECT_DELETE
+  PAGE_CREATE
+  PAGE_UPDATE
+  PAGE_DELETE
+  PAGE_REORDER
+  BOARD_LOCK
+  BOARD_UNLOCK
+}
+
+enum WhiteboardPermissionLevel {
+  VIEW_ONLY
+  COLLABORATE
+  FULL_COLLABORATION
+}
+
+enum WhiteboardBackground {
+  BLANK
+  GRID
+  RULED
+  DOTTED
+  GRAPH_PAPER
+}
+
 // ---------------------------------------------------------------------------
 // Core identity
 // ---------------------------------------------------------------------------
@@ -71,6 +116,7 @@ model User {
   status          AccountStatus @default(PENDING_VERIFICATION)
   emailVerifiedAt DateTime?
   name            String
+  avatarUrl       String?
   timezone        String        @default("UTC")
   locale          String        @default("en")
   country         String?
@@ -88,6 +134,14 @@ model User {
   userPermissions UserPermission[]
 
   auditLogsAsActor AuditLog[] @relation("AuditLogActor")
+
+  whiteboardPagesCreated   WhiteboardPage[]        @relation("WhiteboardPageCreator")
+  whiteboardObjectsCreated WhiteboardObject[]      @relation("WhiteboardObjectCreator")
+  whiteboardOperations     WhiteboardOperation[]   @relation("WhiteboardOperationActor")
+  whiteboardParticipations WhiteboardParticipant[]
+  sessionAttendance        SessionAttendance[]
+  notesUploaded            Note[]                  @relation("NoteUploader")
+  classNotesGenerated      ClassNote[]             @relation("ClassNoteGenerator")
 
   @@index([role])
   @@index([status])
@@ -318,22 +372,38 @@ model MentorAvailability {
 }
 
 model Booking {
-  id              String         @id @default(cuid())
-  studentId       String
-  student         StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  mentorId        String
-  mentor          MentorProfile  @relation(fields: [mentorId], references: [id], onDelete: Cascade)
-  subjectId       String
-  subject         Subject        @relation(fields: [subjectId], references: [id])
-  gradeLabel      String?
-  scheduledAt     DateTime
-  durationMinutes Int            @default(60)
-  status          BookingStatus  @default(CONFIRMED)
-  studentNotes    String?
-  cancelledById   String?
-  cancelReason    String?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  id               String         @id @default(cuid())
+  studentId        String
+  student          StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  mentorId         String
+  mentor           MentorProfile  @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+  subjectId        String
+  subject          Subject        @relation(fields: [subjectId], references: [id])
+  gradeLabel       String?
+  scheduledAt      DateTime
+  durationMinutes  Int            @default(60)
+  status           BookingStatus  @default(CONFIRMED)
+  studentNotes     String?
+  cancelledById    String?
+  cancelReason     String?
+  // Mentor-given score for a completed session — the input to the student
+  // stats/score dashboard (see app/student/progress). Only settable by the
+  // assigned mentor once status is COMPLETED (see app/api/bookings/[id]).
+  mentorRating     Int?
+  mentorRatingNote String?
+  ratedAt          DateTime?
+  // Actual (not scheduled) timing, derived from SessionAttendance rows —
+  // actualStartedAt is set on the first join, actualEndedAt is bumped
+  // forward on every leave (see app/api/bookings/[id]/attendance).
+  actualStartedAt  DateTime?
+  actualEndedAt    DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  whiteboard Whiteboard?
+  attendance SessionAttendance[]
+  notes      Note[]
+  classNote  ClassNote?
 
   // Double-booking guard: a partial unique index on (mentorId, scheduledAt)
   // WHERE status IN ('PENDING','CONFIRMED') is created directly in
@@ -345,6 +415,207 @@ model Booking {
   @@index([studentId])
   @@index([mentorId])
   @@index([scheduledAt])
+}
+
+// One row per join; a reconnect opens a new row rather than reusing the old
+// one, so a participant's full in/out history for a session is preserved.
+// leftAt is null while the participant is still connected.
+model SessionAttendance {
+  id        String    @id @default(cuid())
+  bookingId String
+  booking   Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt  DateTime  @default(now())
+  leftAt    DateTime?
+
+  @@index([bookingId])
+  @@index([userId])
+}
+
+// A file (PDF/image/doc/etc.) a mentor uploads and shares with the student on
+// a specific Booking — stored in Vercel Blob (see app/api/notes), fileUrl
+// points there. Scoped 1:1 to a Booking (like Whiteboard above) rather than
+// broadcast to a mentor's whole roster, so only that booking's student (and
+// the uploading mentor) can see/download it.
+model Note {
+  id           String   @id @default(cuid())
+  bookingId    String
+  booking      Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  uploadedById String
+  uploadedBy   User     @relation("NoteUploader", fields: [uploadedById], references: [id])
+  title        String
+  fileUrl      String
+  fileName     String
+  fileSize     Int
+  mimeType     String
+  createdAt    DateTime @default(now())
+
+  @@index([bookingId])
+  @@index([uploadedById])
+}
+
+// AI-generated summary of a class, produced from a whiteboard snapshot at
+// the mentor's request (see app/api/bookings/[id]/class-notes) — distinct
+// from Note above, which is a mentor-uploaded file. One per Booking;
+// regenerating replaces the existing content (upsert), not versioned.
+model ClassNote {
+  id               String   @id @default(cuid())
+  bookingId        String   @unique
+  booking          Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  generatedById    String
+  generatedBy      User     @relation("ClassNoteGenerator", fields: [generatedById], references: [id])
+  content          String
+  snapshotImageUrl String?
+  model            String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([bookingId])
+  @@index([generatedById])
+}
+
+// ---------------------------------------------------------------------------
+// Live-session whiteboard — one per Booking, lazily created on first access
+// (see lib/whiteboard/access.ts). Board content is stored as editable
+// objects (WhiteboardObject), never a flattened image, and every mutation
+// is timestamped via WhiteboardOperation so a future feature can
+// synchronize recorded video playback with a reconstructed board state at
+// that moment. Real-time sync/persistence is handled by the standalone WS
+// server in /Server, which writes to these same tables directly.
+// ---------------------------------------------------------------------------
+
+model Whiteboard {
+  id                String                    @id @default(cuid())
+  bookingId         String                    @unique
+  booking           Booking                   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  defaultPermission WhiteboardPermissionLevel @default(COLLABORATE)
+  isLocked          Boolean                   @default(false)
+  lockedById        String?
+  lockedAt          DateTime?
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+
+  pages        WhiteboardPage[]
+  participants WhiteboardParticipant[]
+  operations   WhiteboardOperation[]
+  snapshots    WhiteboardSnapshot[]
+
+  @@index([bookingId])
+}
+
+model WhiteboardPage {
+  id           String               @id @default(cuid())
+  whiteboardId String
+  whiteboard   Whiteboard           @relation(fields: [whiteboardId], references: [id], onDelete: Cascade)
+  name         String               @default("Page 1")
+  // Ordering key. Not @@unique — reordering rewrites all positions for a
+  // whiteboard inside one transaction (see lib/whiteboard/pages.ts), which
+  // would violate a unique constraint mid-transaction on some isolation
+  // levels. A plain index is sufficient since the app is the only writer.
+  position     Int
+  background   WhiteboardBackground @default(BLANK)
+  createdById  String
+  createdBy    User                 @relation("WhiteboardPageCreator", fields: [createdById], references: [id])
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  objects    WhiteboardObject[]
+  operations WhiteboardOperation[]
+  snapshots  WhiteboardSnapshot[]
+
+  @@index([whiteboardId, position])
+}
+
+// Current-state table: one row per live object, upserted as operations are
+// applied. This — not WhiteboardOperation — is what a late-joining client
+// hydrates from and what renders on screen. Geometry/type-specific style
+// live in `data` (JSON) because they vary per WhiteboardObjectType; the
+// columns that are actually queried/filtered/sorted across all types
+// (pageId, type, createdById, zIndex) are real columns so they stay
+// indexed SQL rather than JSON scans.
+model WhiteboardObject {
+  id          String               @id // client-generated at creation time — see lib client id strategy
+  pageId      String
+  page        WhiteboardPage       @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  type        WhiteboardObjectType
+  createdById String
+  createdBy   User                 @relation("WhiteboardObjectCreator", fields: [createdById], references: [id])
+  zIndex      Int                  @default(0)
+  x           Float
+  y           Float
+  width       Float?
+  height      Float?
+  rotation    Float                @default(0)
+  data        Json
+  isDeleted   Boolean              @default(false)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@index([pageId, isDeleted])
+  @@index([pageId, zIndex])
+  @@index([createdById])
+}
+
+// Append-only event log. Enables reconnect diffing (future), undo/redo
+// provenance, and — deliberately — timestamps every op so a
+// recording-timeline/replay feature can be built later without a schema
+// change, even though that UI is out of scope for now.
+model WhiteboardOperation {
+  id           String                  @id @default(cuid())
+  whiteboardId String
+  whiteboard   Whiteboard              @relation(fields: [whiteboardId], references: [id], onDelete: Cascade)
+  pageId       String?
+  page         WhiteboardPage?         @relation(fields: [pageId], references: [id], onDelete: SetNull)
+  objectId     String?
+  type         WhiteboardOperationType
+  actorId      String
+  actor        User                    @relation("WhiteboardOperationActor", fields: [actorId], references: [id])
+  payload      Json
+  clientOpId   String
+  createdAt    DateTime                @default(now())
+
+  @@unique([whiteboardId, clientOpId])
+  @@index([whiteboardId, createdAt])
+  @@index([pageId])
+}
+
+// Periodic checkpoint used to safely prune WhiteboardOperation once its
+// contents are folded in — not needed for ordinary reconnect (that reads
+// WhiteboardObject directly). Included now so operation-log compaction and
+// future replay have where to anchor without a later schema change.
+model WhiteboardSnapshot {
+  id              String         @id @default(cuid())
+  whiteboardId    String
+  whiteboard      Whiteboard     @relation(fields: [whiteboardId], references: [id], onDelete: Cascade)
+  pageId          String
+  page            WhiteboardPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  upToOperationId String
+  upToCreatedAt   DateTime
+  objects         Json
+  createdAt       DateTime       @default(now())
+
+  @@index([whiteboardId, pageId, upToCreatedAt])
+}
+
+// Per-participant permission override + presence bookkeeping. Null
+// `permission` inherits Whiteboard.defaultPermission — this is what makes
+// selective per-student collaboration possible without a permission row
+// for every student on every board.
+model WhiteboardParticipant {
+  id           String                     @id @default(cuid())
+  whiteboardId String
+  whiteboard   Whiteboard                 @relation(fields: [whiteboardId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission   WhiteboardPermissionLevel?
+  color        String?
+  lastSeenAt   DateTime?
+  createdAt    DateTime                   @default(now())
+  updatedAt    DateTime                   @updatedAt
+
+  @@unique([whiteboardId, userId])
+  @@index([whiteboardId])
 }
 
 // ---------------------------------------------------------------------------

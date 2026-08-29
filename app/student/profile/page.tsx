@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
+import { AvatarUploader } from "@/components/dashboard/AvatarUploader";
 import { classBands } from "@/lib/content/classes";
 import { SkeletonForm } from "@/components/dashboard/DashboardSkeletons";
 
@@ -20,6 +21,7 @@ export default function StudentProfilePage() {
   const [grade, setGrade] = useState("");
   const [goals, setGoals] = useState("");
   const [preferredTime, setPreferredTime] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     // Populates editable form state once async-loaded profile data arrives.
@@ -28,6 +30,7 @@ export default function StudentProfilePage() {
       setGrade(data.profile.grade);
       setGoals(data.profile.learningGoals);
       setPreferredTime(data.profile.preferredTime);
+      setAvatarUrl(data.profile.avatarUrl);
     }
   }, [data]);
 
@@ -59,6 +62,7 @@ export default function StudentProfilePage() {
       <PageHeader title="Profile" description="Keep your learning preferences up to date." />
 
       <form onSubmit={handleSubmit} className="flex max-w-xl flex-col gap-5 rounded-2xl border border-border bg-white p-6">
+        <AvatarUploader avatarUrl={avatarUrl} name={data.profile.name} onChange={setAvatarUrl} />
         <FormField label="Name" htmlFor="profile-name">
           <Input id="profile-name" value={data.profile.name} disabled />
         </FormField>

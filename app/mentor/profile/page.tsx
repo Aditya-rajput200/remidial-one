@@ -8,6 +8,7 @@ import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
+import { AvatarUploader } from "@/components/dashboard/AvatarUploader";
 import { SkeletonForm } from "@/components/dashboard/DashboardSkeletons";
 import { cn } from "@/lib/cn";
 
@@ -58,6 +59,7 @@ export default function MentorProfilePage() {
   const [teachingStyle, setTeachingStyle] = useState("");
   const [subjectSlugs, setSubjectSlugs] = useState<string[]>([]);
   const [gradeSlugs, setGradeSlugs] = useState<string[]>([]);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/subjects")
@@ -78,6 +80,7 @@ export default function MentorProfilePage() {
       setTeachingStyle(data.profile.teachingStyle);
       setSubjectSlugs(data.profile.subjects.map((s) => s.slug));
       setGradeSlugs(data.profile.grades.map((g) => g.slug));
+      setAvatarUrl(data.profile.avatarUrl);
     }
   }, [data]);
 
@@ -133,6 +136,7 @@ export default function MentorProfilePage() {
       <PageHeader title="Profile" description="This is how your profile will appear to students once mentor profiles go live." />
 
       <form onSubmit={handleSubmit} className="flex max-w-2xl flex-col gap-5 rounded-2xl border border-border bg-white p-6">
+        <AvatarUploader avatarUrl={avatarUrl} name={data.profile.name} onChange={setAvatarUrl} />
         <FormField label="Name" htmlFor="mp-name">
           <Input id="mp-name" value={data.profile.name} disabled />
         </FormField>

@@ -28,6 +28,7 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
       identity: user.id,
       name: user.name,
       asModerator: isModerator,
+      avatarUrl: user.avatarUrl,
     });
 
     if (isModerator) {

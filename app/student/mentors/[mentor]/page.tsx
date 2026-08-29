@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { SessionCard } from "@/components/dashboard/SessionCard";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Avatar } from "@/components/ui/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { SkeletonDetailHeader, SkeletonSessionList } from "@/components/dashboard/DashboardSkeletons";
@@ -15,6 +16,7 @@ import { SkeletonDetailHeader, SkeletonSessionList } from "@/components/dashboar
 type MentorDetail = {
   id: string;
   name: string;
+  avatarUrl: string | null;
   bio: string;
   qualifications: string;
   teachingStyle: string;
@@ -79,9 +81,7 @@ export default function StudentMentorDetailPage(props: PageProps<"/student/mento
       />
 
       <div className="flex items-start gap-4 rounded-2xl border border-border bg-white p-6">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-surface text-muted-2">
-          <UserRound className="h-8 w-8" strokeWidth={1.5} aria-hidden />
-        </div>
+        <Avatar src={mentor.avatarUrl} alt={mentor.name} size="lg" />
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap gap-1.5">
             {mentor.grades.map((g) => (

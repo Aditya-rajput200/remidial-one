@@ -16,3 +16,8 @@ export const cancelBookingSchema = z.object({
 export const rescheduleBookingSchema = z.object({
   scheduledAt: z.coerce.date().refine((d) => d.getTime() > Date.now(), { message: "scheduledAt must be in the future" }),
 });
+
+export const rateBookingSchema = z.object({
+  rating: z.number().int().min(1).max(10),
+  note: z.string().trim().max(500).optional(),
+});

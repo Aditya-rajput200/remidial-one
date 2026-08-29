@@ -8,6 +8,7 @@ export type Role = "student" | "mentor" | "parent" | "admin" | "super_admin";
 export type Session = {
   id: string;
   name: string;
+  avatarUrl: string | null;
   email: string;
   role: Role;
   status: "PENDING_VERIFICATION" | "ACTIVE" | "SUSPENDED" | "DISABLED";
@@ -41,6 +42,7 @@ export function dashboardPathForRole(role: Role): string {
 export function toClientSession(user: {
   id: string;
   name: string;
+  avatarUrl?: string | null;
   email: string;
   role: ApiRole;
   status: Session["status"];
@@ -49,6 +51,7 @@ export function toClientSession(user: {
   return {
     id: user.id,
     name: user.name,
+    avatarUrl: user.avatarUrl ?? null,
     email: user.email,
     role: API_TO_CLIENT_ROLE[user.role],
     status: user.status,

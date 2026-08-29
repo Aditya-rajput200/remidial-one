@@ -9,6 +9,7 @@ import {
   cancelBooking,
   completeBooking,
   fetchBookings,
+  rateBooking,
   rescheduleBooking,
   updateBookingNotes,
 } from "@/lib/data/bookingAdapter";
@@ -112,6 +113,20 @@ export function useMentorData() {
     [update]
   );
 
+  const rateSession = useCallback(
+    async (id: string, rating: number, note?: string) => {
+      const ok = await rateBooking(id, rating, note);
+      if (ok) {
+        update((prev) => ({
+          ...prev,
+          sessions: prev.sessions.map((s) => (s.id === id ? { ...s, mentorRating: rating, mentorRatingNote: note ?? null } : s)),
+        }));
+      }
+      return ok;
+    },
+    [update]
+  );
+
   const addMessage = useCallback(
     (message: Message) => {
       update((prev) => ({ ...prev, messages: [...prev.messages, message] }));
@@ -174,6 +189,7 @@ export function useMentorData() {
     updateSessionStatus,
     rescheduleSession,
     updateSessionNotes,
+    rateSession,
     addMessage,
     updateProfile,
     updateAvailability,

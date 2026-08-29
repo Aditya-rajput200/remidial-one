@@ -20,6 +20,7 @@ export default async function StudentLayout({ children }: { children: ReactNode 
   const initialSession: Session = {
     id: publicUser.id,
     name: publicUser.name,
+    avatarUrl: publicUser.avatarUrl,
     email: publicUser.email,
     role: "student",
     status: publicUser.status,

@@ -5,7 +5,7 @@ import { updateMentorProfileSchema } from "@/lib/validation/profile";
 import { errorResponse } from "@/lib/api/respond";
 
 const include = {
-  user: { select: { name: true, email: true } },
+  user: { select: { name: true, email: true, avatarUrl: true } },
   subjects: { select: { slug: true, name: true } },
   grades: { select: { slug: true, name: true } },
 } as const;
@@ -18,6 +18,7 @@ function toDto(profile: Awaited<ReturnType<typeof loadProfile>>) {
   return {
     name: profile.user.name,
     email: profile.user.email,
+    avatarUrl: profile.user.avatarUrl,
     status: profile.status,
     bio: profile.bio ?? "",
     qualifications: profile.qualifications ?? "",

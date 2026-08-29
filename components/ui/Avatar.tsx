@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Image from "next/image";
 import { UserRound } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -12,11 +13,14 @@ export function Avatar({
   src,
   alt,
   size = "md",
+  fallback,
   className,
 }: {
-  src?: string;
+  src?: string | null;
   alt: string;
   size?: keyof typeof sizeClasses;
+  /** Rendered in place of the default person icon when there's no src. */
+  fallback?: ReactNode;
   className?: string;
 }) {
   if (src) {
@@ -41,7 +45,7 @@ export function Avatar({
         className
       )}
     >
-      <UserRound className="h-1/2 w-1/2" strokeWidth={1.5} aria-hidden />
+      {fallback ?? <UserRound className="h-1/2 w-1/2" strokeWidth={1.5} aria-hidden />}
     </div>
   );
 }

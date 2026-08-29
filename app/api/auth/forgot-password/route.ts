@@ -5,6 +5,9 @@ import { generateRawToken, hashToken } from "@/lib/auth/tokens";
 import { forgotPasswordSchema } from "@/lib/validation/auth";
 import { errorResponse } from "@/lib/api/respond";
 import { checkRateLimit, RateLimitedError } from "@/lib/security/rate-limit";
+import { sendEmail } from "@/lib/email/send";
+import { passwordResetEmail } from "@/lib/email/templates";
+import { appUrl } from "@/lib/email/app-url";
 
 const GENERIC_RESPONSE = { message: "If an account exists for that email, a reset link has been sent." };
 
@@ -32,8 +35,8 @@ export async function POST(request: NextRequest) {
         expiresAt: new Date(Date.now() + 60 * 60 * 1000),
       },
     });
-    // TODO(Phase 10 - background jobs): send via EmailService instead of logging.
-    console.info(`[password-reset] ${email}: token=${rawToken} (send via EmailService once implemented)`);
+    const { subject, html } = passwordResetEmail(user.name, appUrl(`/reset-password?token=${rawToken}`));
+    await sendEmail({ to: email, subject, html });
 
     return NextResponse.json(GENERIC_RESPONSE);
   } catch (error) {

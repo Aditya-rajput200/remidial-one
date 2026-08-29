@@ -9,6 +9,9 @@ import { errorResponse } from "@/lib/api/respond";
 import { checkRateLimit, RateLimitedError } from "@/lib/security/rate-limit";
 import { recordAuditLog } from "@/lib/audit/log";
 import { toPublicUser } from "@/lib/auth/public-user";
+import { sendEmail } from "@/lib/email/send";
+import { verificationEmail } from "@/lib/email/templates";
+import { appUrl } from "@/lib/email/app-url";
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,8 +54,8 @@ export async function POST(request: NextRequest) {
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       },
     });
-    // TODO(Phase 10 - background jobs): send via EmailService instead of logging.
-    console.info(`[email-verification] ${email}: token=${rawToken} (send via EmailService once implemented)`);
+    const { subject, html } = verificationEmail(user.name, appUrl(`/verify-email?token=${rawToken}`));
+    await sendEmail({ to: email, subject, html });
 
     await createSession(user.id);
     await recordAuditLog({

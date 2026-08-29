@@ -11,6 +11,10 @@ export type DashboardSession = {
   durationMinutes: number;
   status: SessionStatus;
   notes: string;
+  mentorRating?: number | null;
+  mentorRatingNote?: string | null;
+  actualStartedAt?: string | null;
+  actualEndedAt?: string | null;
   isDemo?: true;
 };
 
@@ -47,6 +51,7 @@ export type AvailabilitySlot = {
 export type StudentProfile = {
   name: string;
   email: string;
+  avatarUrl: string | null;
   grade: string;
   subjectsOfInterest: string[];
   learningGoals: string;
@@ -56,6 +61,7 @@ export type StudentProfile = {
 export type MentorProfile = {
   name: string;
   email: string;
+  avatarUrl: string | null;
   bio: string;
   qualifications: string;
   subjects: { slug: string; name: string }[];

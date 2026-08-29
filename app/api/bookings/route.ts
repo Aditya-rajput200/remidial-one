@@ -19,6 +19,10 @@ function toDto(booking: {
   status: string;
   gradeLabel: string | null;
   studentNotes: string | null;
+  mentorRating: number | null;
+  mentorRatingNote: string | null;
+  actualStartedAt: Date | null;
+  actualEndedAt: Date | null;
   subject: { slug: string; name: string };
   mentor: { id: string; user: { name: string } };
   student: { id: string; user: { name: string } };
@@ -30,6 +34,10 @@ function toDto(booking: {
     status: booking.status,
     gradeLabel: booking.gradeLabel,
     studentNotes: booking.studentNotes,
+    mentorRating: booking.mentorRating,
+    mentorRatingNote: booking.mentorRatingNote,
+    actualStartedAt: booking.actualStartedAt,
+    actualEndedAt: booking.actualEndedAt,
     subject: booking.subject,
     mentorId: booking.mentor.id,
     mentorName: booking.mentor.user.name,

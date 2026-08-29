@@ -13,7 +13,9 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     const mentor = await prisma.mentorProfile.findUnique({
       where: { id },
       include: {
-        user: { select: { id: true, name: true, email: true, status: true, createdAt: true, timezone: true, country: true } },
+        user: {
+          select: { id: true, name: true, email: true, avatarUrl: true, status: true, createdAt: true, timezone: true, country: true },
+        },
         subjects: { select: { slug: true, name: true } },
         grades: { select: { slug: true, name: true } },
         availability: { select: { dayOfWeek: true, startHour: true, endHour: true } },

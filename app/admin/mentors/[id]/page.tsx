@@ -2,11 +2,12 @@
 
 import { use, useEffect, useState } from "react";
 import { notFound } from "next/navigation";
-import { UserRound, Ban, RotateCcw } from "lucide-react";
+import { Ban, RotateCcw } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
+import { Avatar } from "@/components/ui/Avatar";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { SkeletonDetailHeader, SkeletonTable } from "@/components/dashboard/DashboardSkeletons";
 
@@ -18,7 +19,7 @@ type MentorDetail = {
   teachingStyle: string | null;
   yearsExperience: number | null;
   rejectionReason: string | null;
-  user: { name: string; email: string; status: string; createdAt: string; country: string | null };
+  user: { name: string; email: string; avatarUrl: string | null; status: string; createdAt: string; country: string | null };
   subjects: { slug: string; name: string }[];
   grades: { slug: string; name: string }[];
   availability: { dayOfWeek: number; startHour: number; endHour: number }[];
@@ -148,9 +149,7 @@ export default function AdminMentorDetailPage(props: PageProps<"/admin/mentors/[
       ) : null}
 
       <div className="flex items-start gap-4 rounded-2xl border border-border bg-white p-6">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-surface text-muted-2">
-          <UserRound className="h-8 w-8" strokeWidth={1.5} aria-hidden />
-        </div>
+        <Avatar src={mentor.user.avatarUrl} alt={mentor.user.name} size="lg" />
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap gap-1.5">
             <Badge tone="outline">{mentor.status}</Badge>

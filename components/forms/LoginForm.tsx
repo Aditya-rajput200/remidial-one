@@ -49,6 +49,10 @@ export function LoginForm() {
           <Input id="login-password" name="password" type="password" placeholder="••••••••" autoComplete="current-password" required />
         </FormField>
 
+        <Link href="/forgot-password" className="-mt-2 self-end text-xs font-medium text-muted underline underline-offset-4 hover:text-ink">
+          Forgot password?
+        </Link>
+
         <Button type="submit" variant="primary-lime" size="lg" className="w-full" disabled={submitting}>
           {submitting ? "Logging in…" : "Log In"}
         </Button>

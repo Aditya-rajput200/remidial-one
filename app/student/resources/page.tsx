@@ -6,6 +6,8 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { Resource } from "@/lib/data/types";
 import { SkeletonList } from "@/components/dashboard/DashboardSkeletons";
+import { NotesPanel } from "@/components/dashboard/NotesPanel";
+import { ClassNotesPanel } from "@/components/dashboard/ClassNotesPanel";
 
 const typeIcon: Record<Resource["type"], typeof FileText> = {
   video: PlayCircle,
@@ -28,6 +30,12 @@ export default function StudentResourcesPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title="Resources" description="Notes, assignments, and materials shared by your mentor." />
+
+      <NotesPanel />
+
+      <ClassNotesPanel />
+
+      <h2 className="pt-2 text-sm font-semibold uppercase tracking-wide text-muted">Other Materials</h2>
 
       {data.resources.length > 0 ? (
         <div className="flex flex-col divide-y divide-border rounded-2xl border border-border bg-white">

@@ -15,7 +15,7 @@ const publicSelect = {
   hourlyRate: true,
   currency: true,
   yearsExperience: true,
-  user: { select: { name: true } },
+  user: { select: { name: true, avatarUrl: true } },
   subjects: { select: { slug: true, name: true } },
   grades: { select: { slug: true, name: true } },
 } satisfies Prisma.MentorProfileSelect;
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     ]);
 
     return NextResponse.json({
-      mentors: mentors.map((m) => ({ ...m, name: m.user.name, user: undefined })),
+      mentors: mentors.map((m) => ({ ...m, name: m.user.name, avatarUrl: m.user.avatarUrl, user: undefined })),
       total,
       limit,
       offset,

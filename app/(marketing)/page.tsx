@@ -112,21 +112,62 @@ export default function HomePage() {
   return (
     <>
       {/* Hero */}
-      <Section tone="surface" className="pt-16 pb-16 sm:pt-20 sm:pb-20 lg:pt-24 lg:pb-24">
-        <div className="grid gap-12 lg:grid-cols-12 lg:items-center lg:gap-8">
+      <Section
+        tone="surface"
+        className="relative overflow-x-clip pt-8 pb-10 sm:pt-10 sm:pb-12 lg:pt-12 lg:pb-16"
+        containerClassName="max-w-[1760px] px-5 sm:px-8 lg:px-[6%] xl:px-[8%] 2xl:px-[9%]"
+      >
+        {/* Ambient corner glows — section-wide, behind all content */}
+        <div
+          className="pointer-events-none absolute -right-[10%] -top-[14%] h-[280px] w-[280px] rounded-full bg-lime-soft opacity-70 blur-3xl sm:h-[380px] sm:w-[380px] lg:-right-[6%] lg:-top-[16%] lg:h-[480px] lg:w-[480px]"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute -left-[12%] bottom-[-10%] hidden h-[280px] w-[280px] rounded-full bg-lime-soft opacity-60 blur-3xl sm:block lg:h-[380px] lg:w-[380px]"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute -right-[8%] bottom-[-14%] hidden h-[220px] w-[220px] rounded-full bg-lime-soft opacity-50 blur-3xl sm:block lg:h-[300px] lg:w-[300px]"
+          aria-hidden
+        />
+
+        <div className="relative grid gap-10 lg:grid-cols-12 lg:items-center lg:gap-6">
           {/* Text column */}
-          <div className="flex flex-col items-start gap-6 lg:col-span-6">
+          <div className="flex flex-col items-start gap-6 lg:col-span-5">
             <Badge tone="outline-lime" dot>
               Personalized 1-to-1 Learning
             </Badge>
-            <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight text-ink sm:text-5xl lg:text-6xl">
+            <h1 className="max-w-[680px] text-[clamp(2.75rem,5vw,4.75rem)] font-semibold leading-[0.98] tracking-tight text-ink">
               <span className="text-lime-ink">One</span> Student.
               <br />
               <span className="text-lime-ink">One</span> Mentor.
               <br />
-              <span className="text-lime-ink">One</span> Journey.
+              <span className="text-lime-ink">One</span>{" "}
+              <span className="relative inline-block italic">
+                Journey.
+                <svg
+                  viewBox="0 0 240 26"
+                  className="pointer-events-none absolute -bottom-1 left-0 h-4 w-[104%] text-lime sm:-bottom-2 sm:h-5"
+                  fill="none"
+                  aria-hidden
+                >
+                  <path
+                    d="M3 16C46 6 110 4 160 10C190 14 214 9 236 5"
+                    stroke="currentColor"
+                    strokeWidth="7"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M6 22C50 16 108 15 150 19C178 22 204 18 224 15"
+                    stroke="currentColor"
+                    strokeWidth="5"
+                    strokeLinecap="round"
+                    opacity="0.55"
+                  />
+                </svg>
+              </span>
             </h1>
-            <p className="max-w-sm text-base leading-relaxed text-muted">
+            <p className="max-w-[560px] text-base leading-relaxed text-muted sm:text-lg">
               Personalized learning that adapts to you. Learn better. Grow smarter. Achieve more.
             </p>
             <div className="flex flex-wrap gap-3 pt-1">
@@ -181,56 +222,58 @@ export default function HomePage() {
           </div>
 
           {/* Photo column */}
-          <div className="relative flex items-center justify-center lg:col-span-6">
-            {/* Outer, lighter halo circle */}
+          <div className="relative flex items-center justify-center py-4 lg:col-span-7 lg:py-0">
+            {/* Outer, lighter halo circle — pulled well clear of the lower green elements below */}
             <div
-              className="pointer-events-none absolute inset-0 flex items-center justify-center"
+              className="pointer-events-none absolute inset-0 flex -translate-y-10 items-center justify-center sm:-translate-y-14 lg:-translate-y-16"
               aria-hidden
             >
-              <div className="h-[95%] w-[95%] max-h-[560px] max-w-[560px] rounded-full bg-lime-soft opacity-60" />
+              <div className="h-[92%] w-[92%] max-h-[480px] max-w-[480px] rounded-full bg-lime-soft opacity-60 lg:max-h-[540px] lg:max-w-[540px]" />
             </div>
             <div
-              className="pointer-events-none absolute inset-0 flex items-center justify-center"
+              className="pointer-events-none absolute inset-0 flex -translate-y-10 items-center justify-center sm:-translate-y-14 lg:-translate-y-16"
               aria-hidden
             >
-              <div className="h-[85%] w-[85%] max-h-[480px] max-w-[480px] rounded-full border-2 border-dashed border-lime-ink/25" />
+              <div className="h-[82%] w-[82%] max-h-[420px] max-w-[420px] rounded-full border-2 border-dashed border-lime-ink/25 lg:max-h-[460px] lg:max-w-[460px]" />
             </div>
+            {/* Inner circle for depth — a plain CSS circle (not bgRounded.png)
+                so there's no square image-bounds artifact peeking past the
+                round rings above it. */}
             <div
-              className="pointer-events-none absolute inset-0 flex items-center justify-center"
+              className="pointer-events-none absolute inset-0 flex -translate-y-10 items-center justify-center sm:-translate-y-14 lg:-translate-y-16"
               aria-hidden
             >
-              <Image
-                src="/images/hero/bgRounded.png"
-                alt=""
-                width={900}
-                height={900}
-                className="h-full max-h-[430px] w-auto mix-blend-multiply"
-              />
+              <div className="h-[52%] w-[52%] max-h-[280px] max-w-[280px] rounded-full bg-lime opacity-35 lg:max-h-[310px] lg:max-w-[310px]" />
             </div>
 
-            <Image
-              src="/images/hero/dots.png"
-              alt=""
-              width={200}
-              height={133}
-              className="pointer-events-none absolute -top-8 -right-4 hidden w-32 opacity-90 sm:block"
+            {/* Dot grid, rotated to a vertical strip and windowed down to a
+                center-cropped portion of the pattern (overflow-hidden crop
+                around a centered, oversized image — guaranteed to show actual
+                dots regardless of exact pixel math, unlike clipping to an
+                edge that might land on the source image's own padding). */}
+            <div
+              className="pointer-events-none absolute -top-6 -right-2 h-10 w-10 overflow-hidden sm:-top-8 sm:-right-4 sm:h-14 sm:w-14 lg:-top-10 lg:-right-6 lg:h-16 lg:w-16"
               aria-hidden
-            />
-            <Image
-              src="/images/hero/dots.png"
-              alt=""
-              width={200}
-              height={133}
-              className="pointer-events-none absolute -bottom-6 -left-6 hidden w-28 rotate-180 opacity-80 sm:block"
+            >
+              <div className="absolute left-1/2 top-1/2 h-16 w-24 -translate-x-1/2 -translate-y-1/2 sm:h-24 sm:w-36 lg:h-28 lg:w-40">
+                <Image src="/images/hero/dots.png" alt="" fill className="rotate-[90deg] object-contain opacity-90" />
+              </div>
+            </div>
+            <div
+              className="pointer-events-none absolute -bottom-4 -left-4 hidden h-12 w-12 overflow-hidden sm:block sm:h-16 sm:w-16 lg:h-20 lg:w-20"
               aria-hidden
-            />
+            >
+              <div className="absolute left-1/2 top-1/2 h-20 w-28 -translate-x-1/2 -translate-y-1/2 lg:h-20 lg:w-32">
+                <Image src="/images/hero/dots.png" alt="" fill className="rotate-[90deg] object-contain opacity-80" />
+              </div>
+            </div>
 
             <Image
               src="/images/hero/bulb.png"
               alt=""
               width={1167}
               height={1347}
-              className="pointer-events-none absolute left-10 -top-6 hidden w-14 sm:block"
+              className="pointer-events-none absolute left-3 -top-3 w-12 sm:left-8 sm:-top-8 sm:w-20 lg:left-12 lg:-top-10 lg:w-24"
               aria-hidden
             />
             <Image
@@ -238,7 +281,7 @@ export default function HomePage() {
               alt=""
               width={1536}
               height={1024}
-              className="pointer-events-none absolute right-4 -top-6 hidden w-24 -rotate-6 sm:block"
+              className="pointer-events-none absolute right-2 -top-4 hidden w-24 -rotate-6 sm:block sm:right-6 sm:w-28 lg:right-10 lg:w-32"
               aria-hidden
             />
             <Image
@@ -246,7 +289,7 @@ export default function HomePage() {
               alt=""
               width={1536}
               height={1024}
-              className="pointer-events-none absolute -left-10 top-16 hidden w-24 -rotate-3 sm:block"
+              className="pointer-events-none absolute -left-6 top-16 hidden w-24 -rotate-3 sm:block sm:-left-10 sm:w-28 lg:-left-14 lg:w-32"
               aria-hidden
             />
             <Image
@@ -254,7 +297,7 @@ export default function HomePage() {
               alt=""
               width={416}
               height={400}
-              className="pointer-events-none absolute -right-10 top-[30%] hidden w-16 rotate-6 sm:block"
+              className="pointer-events-none absolute -right-6 top-[28%] hidden w-16 rotate-6 sm:block sm:-right-10 sm:w-20 lg:w-24"
               aria-hidden
             />
             <Image
@@ -262,7 +305,7 @@ export default function HomePage() {
               alt=""
               width={1536}
               height={1024}
-              className="pointer-events-none absolute right-20 top-12 hidden w-14 -rotate-12 sm:block"
+              className="pointer-events-none absolute right-16 top-10 hidden w-16 -rotate-12 sm:block sm:right-20 sm:w-20 lg:right-24 lg:w-28"
               aria-hidden
             />
             <Image
@@ -270,7 +313,7 @@ export default function HomePage() {
               alt=""
               width={500}
               height={220}
-              className="pointer-events-none absolute -left-12 bottom-[30%] hidden w-20 sm:block"
+              className="pointer-events-none absolute -left-8 bottom-[32%] hidden w-20 sm:block lg:-left-12 lg:w-24"
               aria-hidden
             />
             <Image
@@ -278,7 +321,7 @@ export default function HomePage() {
               alt=""
               width={1536}
               height={1024}
-              className="pointer-events-none absolute -left-4 bottom-10 hidden w-24 rotate-2 sm:block"
+              className="pointer-events-none absolute -left-2 bottom-14 hidden w-24 rotate-2 sm:block sm:-left-4 sm:w-28 lg:w-32"
               aria-hidden
             />
             <Image
@@ -286,7 +329,7 @@ export default function HomePage() {
               alt=""
               width={1536}
               height={1024}
-              className="pointer-events-none absolute bottom-6 -right-8 hidden w-20 sm:block"
+              className="pointer-events-none absolute bottom-10 -right-4 hidden w-20 sm:block sm:-right-8 sm:w-24 lg:w-28"
               aria-hidden
             />
             <Image
@@ -294,17 +337,17 @@ export default function HomePage() {
               alt=""
               width={1536}
               height={1024}
-              className="pointer-events-none absolute bottom-24 right-20 hidden w-14 -rotate-6 sm:block"
+              className="pointer-events-none absolute bottom-28 right-16 hidden w-16 -rotate-6 sm:block sm:right-20 sm:w-20 lg:w-24"
               aria-hidden
             />
 
-            <div className="relative w-full max-w-sm sm:max-w-md">
+            <div className="relative w-full max-w-sm translate-y-4 sm:max-w-md sm:translate-y-6 lg:max-w-xl lg:translate-y-9 xl:max-w-2xl">
               <Image
                 src="/images/hero/lowerelements.png"
                 alt=""
                 width={2038}
                 height={772}
-                className="pointer-events-none absolute bottom-0 left-1/2 h-auto w-[140%] max-w-none -translate-x-1/2"
+                className="pointer-events-none absolute -bottom-6 left-1/2 h-auto w-[132%] max-w-none -translate-x-1/2 sm:-bottom-10 lg:-bottom-12"
                 aria-hidden
               />
               <ImageSlot

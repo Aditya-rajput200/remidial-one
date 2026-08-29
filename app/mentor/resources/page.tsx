@@ -11,6 +11,8 @@ import { Select } from "@/components/ui/Select";
 import { FormField } from "@/components/ui/FormField";
 import type { Resource } from "@/lib/data/types";
 import { SkeletonList } from "@/components/dashboard/DashboardSkeletons";
+import { NotesPanel } from "@/components/dashboard/NotesPanel";
+import { ClassNotesPanel } from "@/components/dashboard/ClassNotesPanel";
 
 const typeIcon: Record<Resource["type"], typeof FileText> = {
   video: PlayCircle,
@@ -55,13 +57,19 @@ export default function MentorResourcesPage() {
       <PageHeader
         title="Resources"
         description="Notes, assignments, and materials you've shared with students."
-        action={
-          <Button size="sm" variant="primary-black" className="gap-1.5" onClick={() => setShowForm((v) => !v)}>
-            <Plus className="h-4 w-4" aria-hidden />
-            Add Resource
-          </Button>
-        }
       />
+
+      <NotesPanel />
+
+      <ClassNotesPanel />
+
+      <div className="flex items-center justify-between pt-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Other Materials</h2>
+        <Button size="sm" variant="primary-black" className="gap-1.5" onClick={() => setShowForm((v) => !v)}>
+          <Plus className="h-4 w-4" aria-hidden />
+          Add Resource
+        </Button>
+      </div>
 
       {showForm ? (
         <form

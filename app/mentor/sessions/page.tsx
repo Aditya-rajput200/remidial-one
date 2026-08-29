@@ -6,7 +6,7 @@ import { SessionTabs } from "@/components/dashboard/SessionTabs";
 import { SkeletonSessionList } from "@/components/dashboard/DashboardSkeletons";
 
 export default function MentorSessionsPage() {
-  const { data, updateSessionStatus, rescheduleSession } = useMentorData();
+  const { data, updateSessionStatus, rescheduleSession, rateSession } = useMentorData();
 
   if (!data) {
     return (
@@ -25,6 +25,7 @@ export default function MentorSessionsPage() {
         onReschedule={rescheduleSession}
         onCancel={(id) => updateSessionStatus(id, "cancelled")}
         onMarkComplete={(id) => updateSessionStatus(id, "completed")}
+        onRate={rateSession}
       />
     </div>
   );

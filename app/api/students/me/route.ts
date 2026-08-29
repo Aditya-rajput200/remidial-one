@@ -7,7 +7,7 @@ import { errorResponse } from "@/lib/api/respond";
 async function loadProfile(userId: string) {
   return prisma.studentProfile.findUniqueOrThrow({
     where: { userId },
-    include: { user: { select: { name: true, email: true } } },
+    include: { user: { select: { name: true, email: true, avatarUrl: true } } },
   });
 }
 
@@ -15,6 +15,7 @@ function toDto(profile: Awaited<ReturnType<typeof loadProfile>>) {
   return {
     name: profile.user.name,
     email: profile.user.email,
+    avatarUrl: profile.user.avatarUrl,
     grade: profile.grade ?? "",
     curriculum: profile.curriculum ?? "",
     subjectsOfInterest: profile.subjectsOfInterest,
@@ -41,7 +42,7 @@ export async function PATCH(request: NextRequest) {
     const profile = await prisma.studentProfile.update({
       where: { userId: user.id },
       data: body,
-      include: { user: { select: { name: true, email: true } } },
+      include: { user: { select: { name: true, email: true, avatarUrl: true } } },
     });
 
     return NextResponse.json({ profile: toDto(profile) });

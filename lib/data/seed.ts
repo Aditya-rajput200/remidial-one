@@ -118,6 +118,7 @@ export function seedStudentData(session: AuthSession): StudentData {
     profile: {
       name: session.name,
       email: session.email,
+      avatarUrl: null,
       grade: "Class 10",
       subjectsOfInterest: [math.slug, physics.slug, comms.slug],
       learningGoals: "Build stronger fundamentals in math and physics ahead of board exams.",
@@ -208,6 +209,7 @@ export function seedMentorData(session: AuthSession): MentorData {
     profile: {
       name: session.name,
       email: session.email,
+      avatarUrl: null,
       bio: "Passionate about helping students build genuine understanding, not just exam scores.",
       qualifications: "M.Sc. Mathematics",
       subjects: [

@@ -7,6 +7,10 @@ export type BookingDto = {
   status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED" | "NO_SHOW";
   gradeLabel: string | null;
   studentNotes: string | null;
+  mentorRating: number | null;
+  mentorRatingNote: string | null;
+  actualStartedAt: string | null;
+  actualEndedAt: string | null;
   subject: { slug: string; name: string };
   mentorId: string;
   mentorName: string;
@@ -34,6 +38,10 @@ export function bookingToSession(booking: BookingDto, viewer: "student" | "mento
     durationMinutes: booking.durationMinutes,
     status: toSessionStatus(booking.status),
     notes: booking.studentNotes ?? "",
+    mentorRating: booking.mentorRating,
+    mentorRatingNote: booking.mentorRatingNote,
+    actualStartedAt: booking.actualStartedAt,
+    actualEndedAt: booking.actualEndedAt,
   };
 }
 
@@ -76,6 +84,15 @@ export async function updateBookingNotes(id: string, notes: string): Promise<boo
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "notes", notes }),
+  });
+  return response.ok;
+}
+
+export async function rateBooking(id: string, rating: number, note?: string): Promise<boolean> {
+  const response = await fetch(`/api/bookings/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "rate", rating, note }),
   });
   return response.ok;
 }

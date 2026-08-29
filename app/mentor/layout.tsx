@@ -20,6 +20,7 @@ export default async function MentorLayout({ children }: { children: ReactNode }
   const initialSession: Session = {
     id: publicUser.id,
     name: publicUser.name,
+    avatarUrl: publicUser.avatarUrl,
     email: publicUser.email,
     role: "mentor",
     status: publicUser.status,

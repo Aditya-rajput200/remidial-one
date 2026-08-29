@@ -5,6 +5,7 @@ export function toPublicUser(user: User) {
   return {
     id: user.id,
     name: user.name,
+    avatarUrl: user.avatarUrl,
     email: user.email,
     role: user.role,
     status: user.status,

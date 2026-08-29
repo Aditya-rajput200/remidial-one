@@ -18,12 +18,14 @@ export function SessionTabs({
   onReschedule,
   onCancel,
   onMarkComplete,
+  onRate,
   emptyAction,
 }: {
   sessions: DashboardSession[];
   onReschedule?: (id: string, date: string) => void;
   onCancel?: (id: string) => void;
   onMarkComplete?: (id: string) => void;
+  onRate?: (id: string, rating: number, note?: string) => Promise<boolean> | void;
   emptyAction?: ReactNode;
 }) {
   const [tab, setTab] = useState<SessionStatus>("upcoming");
@@ -58,6 +60,7 @@ export function SessionTabs({
               onReschedule={onReschedule}
               onCancel={onCancel}
               onMarkComplete={onMarkComplete}
+              onRate={onRate}
             />
           ))}
         </div>

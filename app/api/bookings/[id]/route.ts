@@ -36,6 +36,10 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
         mentorName: booking.mentor.user.name,
         studentId: booking.student.id,
         studentName: booking.student.user.name,
+        mentorRating: booking.mentorRating,
+        mentorRatingNote: booking.mentorRatingNote,
+        actualStartedAt: booking.actualStartedAt,
+        actualEndedAt: booking.actualEndedAt,
       },
       isModerator,
     });
@@ -52,6 +56,7 @@ const patchSchema = z.discriminatedUnion("action", [
   }),
   z.object({ action: z.literal("complete") }),
   z.object({ action: z.literal("notes"), notes: z.string().trim().max(2000) }),
+  z.object({ action: z.literal("rate"), rating: z.number().int().min(1).max(10), note: z.string().trim().max(500).optional() }),
 ]);
 
 async function loadOwnedBooking(id: string, userId: string) {
@@ -78,6 +83,29 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (body.action === "notes") {
       const updated = await prisma.booking.update({ where: { id }, data: { studentNotes: body.notes } });
       return NextResponse.json({ booking: { id: updated.id, studentNotes: updated.studentNotes } });
+    }
+
+    if (body.action === "rate") {
+      if (booking.mentor.userId !== user.id) {
+        throw new ForbiddenError("Only the assigned mentor can rate a session");
+      }
+      if (booking.status !== "COMPLETED") {
+        return NextResponse.json({ error: "Only completed sessions can be rated" }, { status: 400 });
+      }
+      const updated = await prisma.booking.update({
+        where: { id },
+        data: { mentorRating: body.rating, mentorRatingNote: body.note ?? null, ratedAt: new Date() },
+      });
+      await recordAuditLog({
+        actorId: user.id,
+        action: "BOOKING_RATED",
+        resourceType: "Booking",
+        resourceId: id,
+        metadata: { rating: body.rating },
+      });
+      return NextResponse.json({
+        booking: { id: updated.id, mentorRating: updated.mentorRating, mentorRatingNote: updated.mentorRatingNote },
+      });
     }
 
     if (booking.status === "CANCELLED" || booking.status === "COMPLETED") {

@@ -37,6 +37,8 @@ export const PERMISSIONS = {
   "recordings.read": "View/play any recording",
   "recordings.delete": "Delete a recording",
 
+  "whiteboard.moderate_any": "Lock/unlock, clear, or override student permissions on any session's whiteboard",
+
   "attendance.read": "View attendance records",
   "attendance.correct": "Modify an attendance record (requires reason)",
 
@@ -93,9 +95,10 @@ const ADMIN_BASELINE: PermissionKey[] = [
  * Default grants per role, seeded into RolePermission. Sensitive,
  * hard-to-reverse capabilities (payments.refund, recordings.delete,
  * meetings.join_any/end, users.delete, roles.manage, settings.manage,
- * cms.publish) are intentionally withheld from ADMIN by default per the
- * project's "no unrestricted admin access automatically" rule — grant them
- * per-user via UserPermission when a specific admin needs them.
+ * cms.publish, whiteboard.moderate_any) are intentionally withheld from
+ * ADMIN by default per the project's "no unrestricted admin access
+ * automatically" rule — grant them per-user via UserPermission when a
+ * specific admin needs them.
  */
 export const DEFAULT_ROLE_PERMISSIONS: Record<Role, PermissionKey[]> = {
   STUDENT: [],
@@ -106,5 +109,5 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<Role, PermissionKey[]> = {
   CONTENT_MANAGER: ["cms.read", "cms.update", "cms.publish", "resources.manage"],
   SUPPORT_AGENT: ["users.read", "students.read", "mentors.read", "support.read", "support.manage"],
   FINANCE_MANAGER: ["payments.read"],
-  MODERATOR: ["meetings.read", "meetings.join_any", "meetings.moderate", "recordings.read"],
+  MODERATOR: ["meetings.read", "meetings.join_any", "meetings.moderate", "recordings.read", "whiteboard.moderate_any"],
 };

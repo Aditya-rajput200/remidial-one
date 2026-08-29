@@ -17,9 +17,13 @@ type ParticipantGrant = {
   name: string;
   /** Moderator/observer join (admin with meetings.join_any) vs. a normal participant. */
   asModerator?: boolean;
+  /** Surfaced client-side via Participant.metadata — LiveKit has no native
+   * avatar concept, so this is how the video tile knows what to show when
+   * a participant's camera is off (see components/session/VideoStage.tsx). */
+  avatarUrl?: string | null;
 };
 
-export async function createParticipantToken({ roomName, identity, name, asModerator }: ParticipantGrant): Promise<string> {
+export async function createParticipantToken({ roomName, identity, name, asModerator, avatarUrl }: ParticipantGrant): Promise<string> {
   const apiKey = requireEnv("LIVEKIT_API_KEY");
   const apiSecret = requireEnv("LIVEKIT_API_SECRET");
 
@@ -27,6 +31,7 @@ export async function createParticipantToken({ roomName, identity, name, asModer
     identity,
     name,
     ttl: "4h",
+    metadata: avatarUrl ? JSON.stringify({ avatarUrl }) : undefined,
   });
 
   token.addGrant({
