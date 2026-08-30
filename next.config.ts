@@ -7,15 +7,15 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
-      // Canonical host is www.remedialone.in (matches SITE_URL in lib/seo.ts
+      // Canonical host is www.remedial-one.in (matches SITE_URL in lib/seo.ts
       // and the sitemap it generates) — force the apex domain over to it so
       // Googlebot never crawls/reads the sitemap from a host that doesn't
       // match the URLs inside it (that mismatch is what Search Console's
       // "URL not allowed for a Sitemap at this location" error means).
       {
         source: "/:path*",
-        has: [{ type: "host", value: "remedialone.in" }],
-        destination: "https://www.remedialone.in/:path*",
+        has: [{ type: "host", value: "remedial-one.in" }],
+        destination: "https://www.remedial-one.in/:path*",
         permanent: true,
       },
       // /subjects, /skills, /how-it-works, and /resources were merged into a

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const SITE_NAME = "Remedial One";
-export const SITE_URL = "https://www.remedialone.in";
+export const SITE_URL = "https://www.remedial-one.in";
 export const SITE_TAGLINE = "One Student. One Mentor. One Learning Journey.";
-export const SITE_EMAIL = "support@remedialone.in";
+export const SITE_EMAIL = "support@remedial-one.in";
 export const SITE_PHONE = "+919334857780";
 export const SITE_PHONE_DISPLAY = "+91 93348 57780";
 
