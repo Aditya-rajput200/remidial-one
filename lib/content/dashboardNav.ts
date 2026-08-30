@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   ListChecks,
   Newspaper,
+  Inbox,
   type LucideIcon,
 } from "lucide-react";
 
@@ -56,6 +57,7 @@ export const adminNav: DashboardNavItem[] = [
   { label: "Mentors", href: "/admin/mentors", icon: GraduationCap },
   { label: "Students", href: "/admin/students", icon: UsersRound },
   { label: "Bookings", href: "/admin/bookings", icon: CalendarClock },
+  { label: "Inquiries", href: "/admin/inquiries", icon: Inbox },
   { label: "Blog", href: "/admin/blog", icon: Newspaper },
   { label: "Audit Log", href: "/admin/audit", icon: ShieldCheck },
   { label: "Assessments", href: "/admin/assessments", icon: ListChecks },

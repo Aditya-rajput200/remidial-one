@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { toClientSession, type ApiRole, type Session } from "@/lib/auth/session";
 
 type SignupInput = { name: string; email: string; password: string; role: "student" | "mentor" | "parent" };
@@ -48,6 +49,7 @@ export function SessionProvider({
 }) {
   const [session, setSession] = useState<Session | null>(initialSession ?? null);
   const [ready, setReady] = useState(initialSession !== undefined);
+  const router = useRouter();
 
   useEffect(() => {
     if (initialSession !== undefined) return;
@@ -91,7 +93,10 @@ export function SessionProvider({
   const logout = useCallback(async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     setSession(null);
-  }, []);
+    // replace, not push — logging out shouldn't leave the now-unauthorized
+    // dashboard page one "back" tap away.
+    router.replace("/login");
+  }, [router]);
 
   const refreshSession = useCallback(async () => {
     const response = await fetch("/api/auth/me");

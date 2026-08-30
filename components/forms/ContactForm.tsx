@@ -12,14 +12,19 @@ type Errors = Partial<Record<"name" | "email" | "message", string>>;
 
 export function ContactForm() {
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
+  const [submitError, setSubmitError] = useState("");
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const name = String(formData.get("name") ?? "").trim();
     const email = String(formData.get("email") ?? "").trim();
+    const reason = String(formData.get("reason") ?? "student");
     const message = String(formData.get("message") ?? "").trim();
+    // Honeypot — see the visually-hidden field below.
+    const website = String(formData.get("website") ?? "");
 
     const nextErrors: Errors = {};
     if (!name) nextErrors.name = "Please enter your name.";
@@ -27,8 +32,25 @@ export function ContactForm() {
     if (!message) nextErrors.message = "Tell us a little about what you need.";
 
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length === 0) {
+    if (Object.keys(nextErrors).length > 0) return;
+
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      const res = await fetch("/api/contact-messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, reason, message, website }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error ?? "Something went wrong. Please try again.");
+      }
       setSubmitted(true);
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -46,6 +68,13 @@ export function ContactForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5 rounded-2xl border border-border bg-white p-6 sm:p-8" noValidate>
+      {/* Honeypot — hidden from real visitors, never focusable. A filled
+          value flags the submission as spam (checked server-side). */}
+      <div className="absolute h-0 w-0 overflow-hidden" aria-hidden="true">
+        <label htmlFor="contact-website">Website</label>
+        <input id="contact-website" name="website" type="text" tabIndex={-1} autoComplete="off" />
+      </div>
+
       <FormField label="Full name" htmlFor="name" error={errors.name}>
         <Input id="name" name="name" placeholder="Your name" autoComplete="name" />
       </FormField>
@@ -66,8 +95,10 @@ export function ContactForm() {
         <Textarea id="message" name="message" placeholder="Tell us what you're looking for..." />
       </FormField>
 
-      <Button type="submit" variant="primary-lime" size="lg" className="w-full sm:w-auto">
-        Send Message
+      {submitError ? <p className="text-sm font-medium text-error">{submitError}</p> : null}
+
+      <Button type="submit" variant="primary-lime" size="lg" className="w-full sm:w-auto" disabled={submitting}>
+        {submitting ? "Sending…" : "Send Message"}
       </Button>
     </form>
   );

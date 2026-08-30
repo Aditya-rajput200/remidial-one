@@ -20,6 +20,9 @@ type FormValues = {
   focusArea: string;
   preferredTime: string;
   message: string;
+  // Honeypot — real visitors never see or fill this (see the visually-hidden
+  // field below); a filled value marks the submission as a bot.
+  website: string;
 };
 
 const initialValues: FormValues = {
@@ -32,6 +35,7 @@ const initialValues: FormValues = {
   focusArea: "",
   preferredTime: "morning",
   message: "",
+  website: "",
 };
 
 type Errors = Partial<Record<keyof FormValues, string>>;
@@ -71,6 +75,8 @@ export function CounsellingForm() {
   const [values, setValues] = useState<FormValues>(initialValues);
   const [errors, setErrors] = useState<Errors>({});
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const isLastStep = step === steps.length - 1;
 
@@ -78,17 +84,35 @@ export function CounsellingForm() {
     setValues((prev) => ({ ...prev, [key]: value }));
   }
 
-  function handleNext(event: FormEvent<HTMLFormElement>) {
+  async function handleNext(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const stepErrors = validateStep(step, values);
     setErrors(stepErrors);
     if (Object.keys(stepErrors).length > 0) return;
 
-    if (isLastStep) {
-      setSubmitted(true);
+    if (!isLastStep) {
+      setStep((current) => current + 1);
       return;
     }
-    setStep((current) => current + 1);
+
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      const res = await fetch("/api/counselling-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error ?? "Something went wrong. Please try again.");
+      }
+      setSubmitted(true);
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   function handleBack() {
@@ -137,6 +161,24 @@ export function CounsellingForm() {
       <h3 className="mb-6 text-lg font-semibold text-ink">{steps[step].title}</h3>
 
       <form onSubmit={handleNext} className="flex flex-col gap-5" noValidate>
+        {/* Honeypot — hidden from real visitors (zero-size + overflow-hidden,
+            not display:none, so it still fools bots that skip display:none
+            fields specifically), never focusable. A filled value flags the
+            submission as spam. absolute + h-0 w-0 keeps it from ever affecting
+            page layout or scroll, regardless of what it's nested inside. */}
+        <div className="absolute h-0 w-0 overflow-hidden" aria-hidden="true">
+          <label htmlFor="website">Website</label>
+          <input
+            id="website"
+            name="website"
+            type="text"
+            tabIndex={-1}
+            autoComplete="off"
+            value={values.website}
+            onChange={(event) => update("website", event.target.value)}
+          />
+        </div>
+
         {step === 0 ? (
           <>
             <FormField label="Parent / guardian name" htmlFor="parentName" error={errors.parentName}>
@@ -260,6 +302,8 @@ export function CounsellingForm() {
           </>
         ) : null}
 
+        {submitError ? <p className="text-sm font-medium text-error">{submitError}</p> : null}
+
         <div className="mt-2 flex items-center justify-between gap-3">
           {step > 0 ? (
             <Button type="button" variant="ghost" size="md" onClick={handleBack} className="gap-1.5">
@@ -269,8 +313,8 @@ export function CounsellingForm() {
           ) : (
             <span />
           )}
-          <Button type="submit" variant="primary-lime" size="md" className="gap-1.5">
-            {isLastStep ? "Book Free Counselling" : "Next"}
+          <Button type="submit" variant="primary-lime" size="md" className="gap-1.5" disabled={submitting}>
+            {isLastStep ? (submitting ? "Submitting…" : "Book Free Counselling") : "Next"}
             {!isLastStep ? <ArrowRight className="h-4 w-4" aria-hidden /> : null}
           </Button>
         </div>
