@@ -17,11 +17,13 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const user = await getCurrentUser();
 
   if (!user) redirect("/login?redirect=/admin");
-  // CONTENT_MANAGER is let into the coarse /admin tree for the blog CMS
-  // screens (app/admin/blog/**); their access to everything else here is
-  // still bounded by the fine-grained cms.* permission checks each of those
-  // API routes performs individually.
-  if (!["ADMIN", "SUPER_ADMIN", "CONTENT_MANAGER"].includes(user.role)) redirect("/");
+  // Every non-STUDENT/MENTOR/PARENT role gets into the coarse /admin tree —
+  // CONTENT_MANAGER for the blog CMS, SUPPORT_AGENT for /admin/inquiries,
+  // FINANCE_MANAGER/MODERATOR for their respective areas. Access to any
+  // specific page or action within /admin is still bounded by the
+  // fine-grained permission check each API route performs individually; this
+  // layout only keeps ordinary end users out.
+  if (["STUDENT", "MENTOR", "PARENT"].includes(user.role)) redirect("/");
 
   return <AdminShell>{children}</AdminShell>;
 }
