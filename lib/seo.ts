@@ -6,6 +6,15 @@ export const SITE_TAGLINE = "One Student. One Mentor. One Learning Journey.";
 export const SITE_EMAIL = "support@remedial-one.in";
 export const SITE_PHONE = "+919334857780";
 export const SITE_PHONE_DISPLAY = "+91 93348 57780";
+// Support WhatsApp line — deliberately separate from SITE_PHONE above, which
+// is the general contact number used for tel: links and JSON-LD.
+export const SITE_WHATSAPP = "919470448026";
+
+/** Builds a wa.me deep link that opens a chat with SITE_WHATSAPP, optionally pre-filled. */
+export function whatsappHref(message?: string): string {
+  const base = `https://wa.me/${SITE_WHATSAPP}`;
+  return message ? `${base}?text=${encodeURIComponent(message)}` : base;
+}
 
 // Branded 1200x630 social card, generated at app/opengraph-image.tsx. Referenced
 // explicitly here (not left to the file convention) because every page's
