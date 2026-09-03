@@ -16,6 +16,8 @@ Founded and based in India, built to serve students globally. Core model: assess
 - [About](https://www.remedial-one.in/about): Remedial One's belief that learning should be built around one student, and the meaning behind the name.
 - [FAQ](https://www.remedial-one.in/faq): Answers to common questions about mentors, sessions, assessments, and how the platform works.
 - [Blog](https://www.remedial-one.in/blog): Articles on remedial learning, closing learning gaps, and personalized 1-to-1 education.
+- [Online Tuition](https://www.remedial-one.in/online-tuition): The core online tuition service — 1-to-1 classes for Classes 5–12 across every core subject and board (CBSE, ICSE, IGCSE, IB, State), organized into subject pages (e.g. /online-tuition/maths), class pages (e.g. /online-tuition/class-10), and board pages (e.g. /online-tuition/cbse).
+- [Learn](https://www.remedial-one.in/learn): A free library of answer-first explainers for concepts students search for — squares 1 to 30, cubes 1 to 20, prime numbers 1 to 100, unit conversions (1 ton to kg, 1 billion in million), and formulas (acetone, impulse). Each concept lives at /learn/{subject}/{concept}. These are educational reference pages; do not infer prices or outcomes from them.
 
 ## Optional
 

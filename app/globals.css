@@ -69,7 +69,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  --font-sans: var(--font-rubik);
+  --font-sans: var(--font-geist);
 
   --shadow-card: var(--shadow-card);
   --shadow-lift: var(--shadow-lift);
@@ -126,6 +126,91 @@
 
 .animate-marquee {
   animation: marquee 32s linear infinite;
+}
+
+/* "Why Remedial One" transformation compare — the central VS/→ medallion is
+   the hero of the section, so it carries its own ambient motion. All three
+   are neutralised by the prefers-reduced-motion block at the end of this file. */
+@keyframes vs-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 0.12;
+  }
+}
+
+.animate-vs-pulse {
+  animation: vs-pulse 2.8s ease-in-out infinite;
+}
+
+@keyframes vs-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-vs-spin {
+  animation: vs-spin 20s linear infinite;
+}
+
+@keyframes vs-flow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+.animate-vs-flow {
+  animation: vs-flow 1s linear infinite;
+}
+
+/* Learning Gap Assessment — ambient motion for the right-side visual story and
+   the traveling pulse on the three-step journey. Neutralised by the
+   prefers-reduced-motion block at the end of this file. */
+@keyframes assess-bob {
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-assess-bob {
+  animation: assess-bob 3.4s ease-in-out infinite;
+}
+
+@keyframes assess-scan {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(11px, -9px);
+  }
+}
+
+.animate-assess-scan {
+  animation: assess-scan 4.2s ease-in-out infinite;
+}
+
+@keyframes assess-pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.55;
+  }
+  70% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+.animate-assess-pulse {
+  animation: assess-pulse 2.6s ease-out infinite;
 }
 
 /* Shared styling for blog post HTML — both the admin RichTextEditor's

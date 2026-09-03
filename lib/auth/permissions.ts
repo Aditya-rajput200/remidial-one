@@ -25,6 +25,12 @@ export const PERMISSIONS = {
   "mentors.approve": "Approve or reject mentor applications",
   "mentors.suspend": "Suspend or reactivate a mentor",
 
+  "teacher_leads.read": "View the teacher lead funnel",
+  "teacher_leads.manage": "Create, assign, update, log activity on, and convert teacher leads",
+  "teacher_onboarding.read": "View teacher onboarding pipelines, documents, counseling, demo, and technical assessment records",
+  "teacher_onboarding.manage": "Schedule/record counseling, demo, and technical assessment; move onboarding stages",
+  "teacher_onboarding.verify": "Finalize a teacher application — approve, reject, send back for correction, or request more information",
+
   "bookings.read": "View any booking",
   "bookings.manage": "Cancel, reschedule, or modify any booking",
 
@@ -74,6 +80,10 @@ const ADMIN_BASELINE: PermissionKey[] = [
   "students.manage",
   "mentors.read",
   "mentors.approve",
+  "teacher_leads.read",
+  "teacher_leads.manage",
+  "teacher_onboarding.read",
+  "teacher_onboarding.manage",
   "bookings.read",
   "bookings.manage",
   "meetings.read",
@@ -95,10 +105,11 @@ const ADMIN_BASELINE: PermissionKey[] = [
  * Default grants per role, seeded into RolePermission. Sensitive,
  * hard-to-reverse capabilities (payments.refund, recordings.delete,
  * meetings.join_any/end, users.delete, roles.manage, settings.manage,
- * cms.publish, whiteboard.moderate_any) are intentionally withheld from
- * ADMIN by default per the project's "no unrestricted admin access
- * automatically" rule — grant them per-user via UserPermission when a
- * specific admin needs them.
+ * cms.publish, whiteboard.moderate_any, teacher_onboarding.verify) are
+ * intentionally withheld from ADMIN by default per the project's "no
+ * unrestricted admin access automatically" rule — grant them per-user via
+ * UserPermission when a specific admin needs them. teacher_onboarding.verify
+ * (final approve/reject of a teacher) is SUPER_ADMIN-only by default.
  */
 export const DEFAULT_ROLE_PERMISSIONS: Record<Role, PermissionKey[]> = {
   STUDENT: [],
@@ -110,4 +121,8 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<Role, PermissionKey[]> = {
   SUPPORT_AGENT: ["users.read", "students.read", "mentors.read", "support.read", "support.manage"],
   FINANCE_MANAGER: ["payments.read"],
   MODERATOR: ["meetings.read", "meetings.join_any", "meetings.moderate", "recordings.read", "whiteboard.moderate_any"],
+  // Early lead funnel + student-side counseling only. No teacher_onboarding.*
+  // (documents/evaluations/assignment stay hidden from counselors until an
+  // explicit per-user grant), matching Module 5's business rule.
+  COUNSELOR: ["teacher_leads.read", "teacher_leads.manage", "students.read", "support.read"],
 };

@@ -31,6 +31,7 @@ export async function generateMetadata({
     title: post.seoTitle || post.title,
     description: post.seoDescription || post.excerpt,
     path: `/blog/${post.slug}`,
+    ogType: "article",
   });
 }
 

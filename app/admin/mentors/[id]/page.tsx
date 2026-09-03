@@ -1,8 +1,8 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import { notFound } from "next/navigation";
-import { Ban, RotateCcw } from "lucide-react";
+import { notFound, useRouter } from "next/navigation";
+import { Ban, RotateCcw, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -30,11 +30,13 @@ const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default function AdminMentorDetailPage(props: PageProps<"/admin/mentors/[id]">) {
   const { id } = use(props.params);
+  const router = useRouter();
   const [mentor, setMentor] = useState<MentorDetail | null | undefined>(undefined);
   const [suspending, setSuspending] = useState(false);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   function load() {
     fetch(`/api/admin/mentors/${id}`)
@@ -79,6 +81,20 @@ export default function AdminMentorDetailPage(props: PageProps<"/admin/mentors/[
     setSuspending(false);
     setReason("");
     load();
+  }
+
+  async function deleteMentor() {
+    setBusy(true);
+    setError("");
+    const res = await fetch(`/api/admin/mentors/${id}`, { method: "DELETE" });
+    setBusy(false);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      setError(body?.error ?? "Could not delete this mentor.");
+      setConfirmDelete(false);
+      return;
+    }
+    router.push("/admin/mentors");
   }
 
   async function reactivate() {
@@ -192,6 +208,38 @@ export default function AdminMentorDetailPage(props: PageProps<"/admin/mentors/[
           </div>
         ) : (
           <p className="text-sm text-muted">No bookings yet.</p>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-3 rounded-2xl border border-error/30 bg-error-soft/40 p-6">
+        <h2 className="text-sm font-semibold text-error">Danger zone</h2>
+        <p className="text-xs text-muted">
+          Deleting removes this mentor&apos;s account and their onboarding record permanently. It&apos;s only
+          allowed for mentors with no sessions or content — otherwise suspend them instead.
+        </p>
+        {confirmDelete ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm text-ink">Delete {mentor.user.name}? This cannot be undone.</span>
+            <Button size="sm" variant="primary-black" onClick={deleteMentor} disabled={busy}>
+              {busy ? "Deleting…" : "Yes, delete"}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(false)} disabled={busy}>
+              Cancel
+            </Button>
+          </div>
+        ) : (
+          <div>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="gap-1.5 text-error hover:bg-error-soft"
+              onClick={() => setConfirmDelete(true)}
+              disabled={busy}
+            >
+              <Trash2 className="h-4 w-4" aria-hidden />
+              Delete mentor
+            </Button>
+          </div>
         )}
       </div>
     </div>

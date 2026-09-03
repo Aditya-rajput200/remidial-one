@@ -43,8 +43,8 @@ export default function BecomeAMentorPage() {
           />
           <div className="mt-8">
             <Button href="/contact" variant="primary-lime" size="lg">
-              Apply as a Mentor
-            </Button>
+            Get in touch
+          </Button>
           </div>
         </div>
       </Section>
@@ -84,7 +84,7 @@ export default function BecomeAMentorPage() {
             Ready to become one of our first mentors?
           </h2>
           <Button href="/contact" variant="primary-lime" size="lg">
-            Apply as a Mentor
+            Get in touch
           </Button>
         </div>
       </Section>

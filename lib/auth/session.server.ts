@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { cookies, headers } from "next/headers";
 import { prisma } from "@/lib/db/prisma";
 import { generateRawToken, hashToken } from "@/lib/auth/tokens";
@@ -45,8 +46,16 @@ export async function createSession(userId: string) {
   });
 }
 
-/** Returns the current session row (with user) after validating it's live, or null. */
-export async function getCurrentSession() {
+/**
+ * Returns the current session row (with user) after validating it's live, or null.
+ *
+ * Wrapped in React `cache()` so the cookie read + `session.findUnique` runs at
+ * most once per request no matter how many times it's called (layout guard,
+ * page `requireUser`/`requireRole`, nested server components, generateMetadata,
+ * …). The cache is per-request only — a revoked or expired session is still
+ * picked up on the next request.
+ */
+export const getCurrentSession = cache(async () => {
   const jar = await cookies();
   const raw = jar.get(SESSION_COOKIE)?.value;
   if (!raw) return null;
@@ -69,7 +78,7 @@ export async function getCurrentSession() {
   }
 
   return session;
-}
+});
 
 export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
   const session = await getCurrentSession();

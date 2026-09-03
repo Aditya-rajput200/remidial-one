@@ -18,13 +18,16 @@ const nextConfig: NextConfig = {
         destination: "https://www.remedial-one.in/:path*",
         permanent: true,
       },
-      // /subjects, /skills, /how-it-works, and /resources were merged into a
-      // single /one-to-one-tuition page with anchored sections — keep the old
-      // URLs alive for anyone with them bookmarked/indexed.
-      { source: "/subjects", destination: "/one-to-one-tuition#subjects", permanent: true },
-      { source: "/skills", destination: "/one-to-one-tuition#skills", permanent: true },
+      // /how-it-works and /resources are anchored sections on /one-to-one-tuition
+      // — keep the old URLs alive for anyone with them bookmarked/indexed.
+      // ("/subjects" and "/skills" are now standalone hub pages with their own
+      // per-item detail pages, so they're no longer redirected.)
       { source: "/how-it-works", destination: "/one-to-one-tuition#how-it-works", permanent: true },
       { source: "/resources", destination: "/one-to-one-tuition#resources", permanent: true },
+      // "home tuition" (the highest-volume commercial term in the keyword map)
+      // is targeted on the core /online-tuition page — /home-tuition is an alias
+      // so the natural URL resolves to the canonical money page.
+      { source: "/home-tuition", destination: "/online-tuition", permanent: true },
     ];
   },
 };

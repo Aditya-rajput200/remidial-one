@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Rubik } from "next/font/google";
+import { Geist } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/lib/auth/SessionProvider";
 import { JsonLd } from "@/components/ui/JsonLd";
 import { SITE_NAME, SITE_TAGLINE, SITE_URL, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 
-const rubik = Rubik({
-  variable: "--font-rubik",
+const geist = Geist({
+  variable: "--font-geist",
   subsets: ["latin"],
 });
 
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${rubik.variable} h-full antialiased`}>
+    <html lang="en" className={`${geist.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-white text-ink">
         <JsonLd data={organizationJsonLd()} />
         <JsonLd data={websiteJsonLd()} />

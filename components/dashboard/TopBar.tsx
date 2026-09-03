@@ -5,6 +5,7 @@ import { Menu, LogOut, X } from "lucide-react";
 import type { DashboardNavItem } from "@/lib/content/dashboardNav";
 import { useSession } from "@/lib/auth/SessionProvider";
 import { Logo } from "@/components/layout/Logo";
+import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { Avatar } from "@/components/ui/Avatar";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -44,6 +45,7 @@ export function TopBar({ items }: { items: DashboardNavItem[] }) {
           <span className="hidden text-sm text-muted sm:inline">
             Welcome, <span className="font-semibold text-ink">{session?.name.split(" ")[0]}</span>
           </span>
+          <NotificationBell />
           {session ? (
             <Avatar
               src={session.avatarUrl}

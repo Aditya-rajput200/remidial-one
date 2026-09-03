@@ -14,8 +14,14 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status") ?? undefined;
     const q = searchParams.get("q")?.trim();
 
+    // Mentors only appear here once they've finished onboarding — the
+    // in-pipeline statuses (APPLICATION/UNDER_REVIEW/NEEDS_CORRECTION/VERIFIED)
+    // live under /admin/teacher-onboarding. An explicit ?status= can still
+    // target one of those.
     const where: Prisma.MentorProfileWhereInput = {
-      ...(status ? { status: status as MentorApplicationStatus } : {}),
+      ...(status
+        ? { status: status as MentorApplicationStatus }
+        : { status: { in: ["ACTIVE", "SUSPENDED", "REJECTED"] } }),
       ...(q
         ? {
             OR: [

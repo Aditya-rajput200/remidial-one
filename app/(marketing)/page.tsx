@@ -7,14 +7,13 @@ import {
   Target,
   GraduationCap,
   Heart,
-  Check,
-  X as XIcon,
   UsersRound,
   ArrowRight,
   BarChart3,
-  ClipboardList,
-  Search,
+  MessageCircle,
   TrendingUp,
+  CheckCircle2,
+  Sparkles,
 } from "lucide-react";
 import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -24,15 +23,18 @@ import { Avatar } from "@/components/ui/Avatar";
 import { ImageSlot } from "@/components/ui/ImageSlot";
 import { VideoHero } from "@/components/ui/VideoHero";
 import { SubjectCard } from "@/components/ui/SubjectCard";
-import { SkillCard } from "@/components/ui/SkillCard";
 import { ClassBandCard } from "@/components/ui/ClassBandCard";
 import { MentorCard } from "@/components/ui/MentorCard";
 import { StepsList } from "@/components/ui/StepsList";
 import { FaqAccordion } from "@/components/ui/FaqAccordion";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { Marquee } from "@/components/ui/Marquee";
+import { TransformationCompare } from "@/components/ui/TransformationCompare";
+import { AssessmentVisual } from "@/components/ui/AssessmentVisual";
+import { AssessmentJourney } from "@/components/ui/AssessmentJourney";
 import { PromoBanner } from "@/components/ui/PromoBanner";
 import { BannerSlot } from "@/components/ui/BannerSlot";
+import { iconMap } from "@/lib/icon-map";
 import { subjects } from "@/lib/content/subjects";
 import { classBands } from "@/lib/content/classes";
 import { skills } from "@/lib/content/skills";
@@ -40,6 +42,8 @@ import { mentorPreviews } from "@/lib/content/mentors";
 import { generalFaqs } from "@/lib/content/faqs";
 import { buildMetadata } from "@/lib/seo";
 import { publicAsset } from "@/lib/assets";
+import { prisma } from "@/lib/db/prisma";
+import { BlogPostCard, type BlogPostPreview } from "@/components/ui/BlogPostCard";
 
 export const metadata = buildMetadata({
   title: "Personalized 1-to-1 Learning, Remedial Classes & Mentorship",
@@ -47,6 +51,40 @@ export const metadata = buildMetadata({
     "Remedial One is a personalized learning platform that uses learning gap assessments to match students with qualified 1-to-1 mentors — for remedial education, exam preparation, and skills beyond the classroom.",
   path: "/",
 });
+
+export const revalidate = 300;
+
+async function getLatestPosts(): Promise<BlogPostPreview[]> {
+  const posts = await prisma.blogPost.findMany({
+    where: { status: "PUBLISHED" },
+    orderBy: { publishedAt: "desc" },
+    take: 3,
+    select: {
+      slug: true,
+      title: true,
+      excerpt: true,
+      coverImageUrl: true,
+      category: true,
+      publishedAt: true,
+      content: true,
+      author: { select: { name: true, avatarUrl: true } },
+    },
+  });
+
+  return posts.map((post) => {
+    const wordCount = post.content.replace(/<[^>]+>/g, " ").trim().split(/\s+/).filter(Boolean).length;
+    return {
+      slug: post.slug,
+      title: post.title,
+      excerpt: post.excerpt,
+      coverImageUrl: post.coverImageUrl,
+      category: post.category,
+      publishedAt: post.publishedAt ? post.publishedAt.toISOString() : null,
+      readTimeMinutes: Math.max(1, Math.ceil(wordCount / 200)),
+      author: post.author,
+    };
+  });
+}
 
 const heroFeatures = [
   { icon: ShieldCheck, label: "Verified Mentors" },
@@ -79,21 +117,24 @@ const comparisonRemedial = [
 
 const assessmentSteps = [
   {
-    icon: Search,
+    icon: "search",
     title: "Identify learning gaps",
     description: "Chapter- and topic-level assessments pinpoint exactly which concepts a student hasn't fully grasped yet — not just which subject.",
+    detail: "You leave the assessment with a ranked list of concepts to revisit first.",
   },
   {
-    icon: ClipboardList,
+    icon: "clipboard",
     title: "Get a personalized learning plan",
     description: "Mentors evaluate results and focus sessions on the specific gaps the assessment surfaces, instead of re-teaching an entire syllabus.",
+    detail: "Every session targets a named gap, in the order that unblocks the most learning.",
   },
   {
-    icon: TrendingUp,
+    icon: "trending",
     title: "Track progress over time",
     description: "Chapter, topic, and skill-level metrics update as students improve, so growth is visible in the dashboard, not just felt.",
+    detail: "Chapter, topic and skill scores trend on the dashboard after every session.",
   },
-];
+] as const;
 
 const tuitionHighlights = [
   "Choose your subject and class level",
@@ -104,11 +145,31 @@ const tuitionHighlights = [
 ];
 
 const steps = [
-  { title: "Tell us what you want to learn", description: "Share your subject, class, and learning goals." },
-  { title: "Discover the right mentor", description: "Browse mentors matched to your needs and pace." },
-  { title: "Book your session", description: "Pick a time that fits your schedule, not a fixed batch." },
-  { title: "Learn 1-to-1", description: "Meet your mentor in a focused, dedicated online session." },
-  { title: "Track your progress", description: "See growth after every session, not just at exam time." },
+  {
+    title: "Tell us what you want to learn",
+    description: "Share your subject, class, and learning goals.",
+    icon: publicAsset("landing-page/how-it-works/one.png"),
+  },
+  {
+    title: "Discover the right mentor",
+    description: "Browse mentors matched to your needs and pace.",
+    icon: publicAsset("landing-page/how-it-works/two.png"),
+  },
+  {
+    title: "Book your session",
+    description: "Pick a time that fits your schedule, not a fixed batch.",
+    icon: publicAsset("landing-page/how-it-works/third.png"),
+  },
+  {
+    title: "Learn 1-to-1",
+    description: "Meet your mentor in a focused, dedicated online session.",
+    icon: publicAsset("landing-page/how-it-works/forth.png"),
+  },
+  {
+    title: "Track your progress",
+    description: "See growth after every session, not just at exam time.",
+    icon: publicAsset("landing-page/how-it-works/fifth.png"),
+  },
 ];
 
 const trustStatements = [
@@ -129,14 +190,16 @@ const trustStatements = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const latestPosts = await getLatestPosts();
+
   return (
     <>
       {/* Hero */}
       <Section
         tone="surface"
-        className="relative overflow-x-clip pt-6 pb-8 sm:pt-8 sm:pb-10 lg:pt-5 lg:pb-6"
-        containerClassName="max-w-[1760px] px-5 sm:px-8 lg:px-[6%] xl:px-[8%] 2xl:px-[9%]"
+        className="relative overflow-x-clip pt-6 pb-10 sm:pt-8 sm:pb-12 lg:flex lg:min-h-[calc(100svh-4.5rem)] lg:max-h-[calc(100svh-4.5rem)] lg:flex-col lg:justify-center lg:overflow-hidden lg:py-6"
+        containerClassName="w-full max-w-[1760px] px-5 sm:px-8 lg:px-[6%] xl:px-[8%] 2xl:px-[9%]"
       >
         {/* Ambient corner glows — section-wide, behind all content */}
         <div
@@ -152,13 +215,13 @@ export default function HomePage() {
           aria-hidden
         />
 
-        <div className="relative grid gap-10 lg:grid-cols-12 lg:items-center lg:gap-6">
+        <div className="relative grid w-full gap-8 sm:gap-10 lg:grid-cols-12 lg:items-center lg:gap-6">
           {/* Text column */}
-          <div className="flex w-full min-w-0 flex-col items-start gap-5 sm:gap-6 lg:col-span-5">
+          <div className="flex w-full min-w-0 flex-col items-start gap-4 sm:gap-5 lg:col-span-5">
             <Badge tone="outline-lime" dot>
               Personalized 1-to-1 Learning
             </Badge>
-            <h1 className="max-w-[680px] text-[clamp(2.25rem,8vw,4.75rem)] font-semibold leading-[1.05] tracking-tight text-ink sm:leading-[1] lg:leading-[0.98]">
+            <h1 className="max-w-[16ch] text-[clamp(2rem,1.4rem+2.6vw,3.5rem)] font-semibold leading-[1.08] tracking-tight text-ink sm:leading-[1.05] lg:leading-[1]">
               <span className="text-lime-ink">One</span> Student.
               <br />
               <span className="text-lime-ink">One</span> Mentor.
@@ -188,12 +251,12 @@ export default function HomePage() {
                 </svg>
               </span>
             </h1>
-            <p className="max-w-[560px] text-sm leading-relaxed text-muted sm:text-base lg:text-lg">
+            <p className="max-w-[520px] text-sm leading-relaxed text-muted sm:text-base">
               Personalized learning that identifies your learning gaps and adapts to you. Learn better. Grow smarter. Achieve more.
             </p>
             <div className="flex w-full flex-col gap-3 pt-1 sm:flex-row sm:flex-wrap">
-              <Button href="/mentors" variant="primary-black" size="lg" className="w-full gap-2 sm:w-auto">
-                Find Your Mentor
+              <Button href="/book-counselling" variant="primary-black" size="lg" className="w-full gap-2 sm:w-auto">
+                Book Counselling
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </Button>
               <Button href="/one-to-one-tuition" variant="secondary-outline" size="lg" className="w-full gap-2 sm:w-auto">
@@ -202,11 +265,11 @@ export default function HomePage() {
               </Button>
             </div>
 
-            <div className="grid w-full grid-cols-2 gap-x-4 gap-y-5 pt-2 sm:grid-cols-4">
+            <div className="grid w-full grid-cols-2 gap-x-4 gap-y-3.5 pt-1 sm:grid-cols-4">
               {heroFeatures.map((feature) => (
-                <div key={feature.label} className="relative flex flex-col items-start gap-2">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-lime-soft text-ink">
-                    <feature.icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
+                <div key={feature.label} className="relative flex flex-col items-start gap-1.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-lime-soft text-ink">
+                    <feature.icon className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
                   </div>
                   <span className="text-xs font-medium leading-tight text-muted">
                     {feature.label}
@@ -225,7 +288,7 @@ export default function HomePage() {
               ))}
             </div>
 
-            <div className="flex items-center gap-3 border-t border-border pt-6">
+            <div className="flex items-center gap-3 border-t border-border pt-4">
               <div className="flex -space-x-3">
                 {[1, 2, 3].map((n) => (
                   <Avatar
@@ -275,7 +338,7 @@ export default function HomePage() {
               aria-hidden
             />
 
-            <div className="relative w-full max-w-sm translate-y-4 sm:max-w-md sm:translate-y-6 lg:max-w-xl lg:translate-y-9 xl:max-w-2xl">
+            <div className="relative w-full max-w-[17rem] translate-y-2 sm:max-w-sm sm:translate-y-4 lg:max-w-md lg:translate-y-2 xl:max-w-lg">
               {/* Background circle cluster — anchored to the student's head
                   (not the whole image box), so it reads as a halo behind her
                   rather than floating in the middle of the frame. */}
@@ -284,9 +347,9 @@ export default function HomePage() {
                 aria-hidden
               >
                 <div className="relative flex items-center justify-center">
-                  <div className="h-[230px] w-[230px] rounded-full bg-lime-soft opacity-60 sm:h-[300px] sm:w-[300px] lg:h-[386px] lg:w-[386px]" />
-                  <div className="absolute h-[200px] w-[200px] rounded-full border-2 border-dashed border-lime-ink/25 sm:h-[260px] sm:w-[260px] lg:h-[336px] lg:w-[336px]" />
-                  <div className="absolute h-[170px] w-[170px] rounded-full bg-lime opacity-35 sm:h-[221px] sm:w-[221px] lg:h-[286px] lg:w-[286px]" />
+                  <div className="h-[190px] w-[190px] rounded-full bg-lime-soft opacity-60 sm:h-[250px] sm:w-[250px] lg:h-[320px] lg:w-[320px]" />
+                  <div className="absolute h-[165px] w-[165px] rounded-full border-2 border-dashed border-lime-ink/25 sm:h-[218px] sm:w-[218px] lg:h-[278px] lg:w-[278px]" />
+                  <div className="absolute h-[140px] w-[140px] rounded-full bg-lime opacity-35 sm:h-[184px] sm:w-[184px] lg:h-[238px] lg:w-[238px]" />
                 </div>
               </div>
               <ImageSlot
@@ -339,35 +402,12 @@ export default function HomePage() {
             description="Traditional classes are built for a room. Remedial One is built for one student — you."
           />
         </ScrollReveal>
-        <div className="mt-10 grid gap-6 sm:grid-cols-2">
-          <ScrollReveal className="rounded-2xl border border-border bg-surface p-8">
-            <h3 className="mb-6 text-sm font-semibold uppercase tracking-wide text-muted">
-              Traditional learning
-            </h3>
-            <ul className="flex flex-col gap-4">
-              {comparisonTraditional.map((item) => (
-                <li key={item} className="flex items-start gap-3 text-sm text-muted">
-                  <XIcon className="mt-0.5 h-4 w-4 shrink-0 text-muted-2" aria-hidden />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </ScrollReveal>
-          <ScrollReveal delay={100} className="rounded-2xl border border-ink bg-ink p-8">
-            <h3 className="mb-6 text-sm font-semibold uppercase tracking-wide text-lime">
-              Remedial One
-            </h3>
-            <ul className="flex flex-col gap-4">
-              {comparisonRemedial.map((item) => (
-                <li key={item} className="flex items-start gap-3 text-sm text-white">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-lime" aria-hidden />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </ScrollReveal>
-        </div>
-        <div className="mt-6 flex justify-center">
+        <TransformationCompare
+          className="mt-12"
+          traditional={comparisonTraditional}
+          remedial={comparisonRemedial}
+        />
+        <div className="mt-10 flex justify-center">
           <Link href="/personalized-learning" className="text-sm font-semibold text-ink underline underline-offset-4">
             Read more about the personalized learning approach
           </Link>
@@ -376,34 +416,32 @@ export default function HomePage() {
 
       {/* Learning gap assessment */}
       <Section tone="surface">
-        <ScrollReveal>
-          <SectionHeading
-            eyebrow="Learning Gap Assessment"
-            title="Every learning journey starts with knowing where you stand."
-            description="Before a mentor teaches, Remedial One's assessment engine helps identify learning gaps at the chapter and topic level — so remedial support targets exactly what a student needs, not a generic revision of the whole syllabus."
-          />
-        </ScrollReveal>
-        <div className="mt-10 grid gap-6 sm:grid-cols-3">
-          {assessmentSteps.map((step, index) => (
-            <ScrollReveal
-              key={step.title}
-              delay={index * 80}
-              className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-6"
-            >
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-lime-soft text-ink">
-                <step.icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
-              </div>
-              <h3 className="text-base font-semibold text-ink">{step.title}</h3>
-              <p className="text-sm leading-relaxed text-muted">{step.description}</p>
-            </ScrollReveal>
-          ))}
+        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)] lg:gap-16">
+          <ScrollReveal>
+            <SectionHeading
+              eyebrow="Learning Gap Assessment"
+              title="Every learning journey starts with knowing where you stand."
+              description="Before a mentor teaches, Remedial One's assessment engine helps identify learning gaps at the chapter and topic level — so remedial support targets exactly what a student needs, not a generic revision of the whole syllabus."
+            />
+          </ScrollReveal>
+          <ScrollReveal delay={120} className="flex justify-center lg:justify-end">
+            <AssessmentVisual />
+          </ScrollReveal>
         </div>
-        <div className="mt-10 flex flex-col items-center gap-4">
-          <Button href="/learning-gap-assessment" variant="secondary-outline" size="lg">
+
+        <AssessmentJourney steps={assessmentSteps} className="mt-12" />
+
+        <div className="mt-12 flex flex-col items-center gap-4">
+          <Button href="/learning-gap-assessment" variant="primary-black" size="lg" className="gap-2">
             See How the Assessment Works
+            <ArrowRight className="h-4 w-4" aria-hidden />
           </Button>
-          <Link href="/remedial-classes" className="text-sm font-semibold text-ink underline underline-offset-4">
+          <Link
+            href="/remedial-classes"
+            className="group inline-flex items-center gap-1.5 text-sm font-semibold text-ink underline-offset-4 hover:underline"
+          >
             Explore remedial classes built around your gaps
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
           </Link>
         </div>
       </Section>
@@ -417,6 +455,9 @@ export default function HomePage() {
             description="Sessions happen in a dedicated online learning room — no commute, no fixed location. Just you, your mentor, and a focused hour built around your goals."
             ctaLabel="See How Sessions Work"
             ctaHref="/one-to-one-tuition#how-it-works"
+            image={publicAsset("landing-page/learnfromanywhere.png")}
+            imageAlt="A student in a focused 1-to-1 online session from home"
+            imageLabel="Learn-from-anywhere illustration"
             imageSide="right"
           />
         </ScrollReveal>
@@ -433,7 +474,7 @@ export default function HomePage() {
             />
             <div className="mt-8">
               <Button href="/one-to-one-tuition" variant="primary-black" size="lg">
-                Find a Mentor
+                Explore 1-to-1 Tuition
               </Button>
             </div>
           </ScrollReveal>
@@ -496,7 +537,11 @@ export default function HomePage() {
       {/* Campaign banner slot */}
       <Section className="py-10 sm:py-12">
         <ScrollReveal>
-          <BannerSlot label="Campaign banner" recommendedSize="Recommended: 1600 × 480" />
+          <BannerSlot
+            src="/landing-page/campaign-banner.png"
+            alt="Remedial One campaign — book a counselling session"
+            href="/book-counselling"
+          />
         </ScrollReveal>
       </Section>
 
@@ -526,42 +571,105 @@ export default function HomePage() {
         </div>
       </Section>
 
-      {/* Bold mid-page CTA in brand green */}
-      <Section tone="lime" className="py-14 sm:py-16">
-        <div className="flex flex-col items-center gap-5 text-center">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-ink px-3 py-1 text-xs font-semibold uppercase tracking-wide text-lime">
-            Start Today
-          </span>
-          <h2 className="max-w-xl text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-            You&apos;re one mentor away from your next milestone.
-          </h2>
-          <Button href="/mentors" variant="primary-black" size="lg" className="gap-2">
-            Find Your Mentor
-            <ArrowRight className="h-4 w-4" aria-hidden />
-          </Button>
-        </div>
-      </Section>
-
       {/* Skills beyond academics */}
-      <Section tone="ink">
-        <ScrollReveal>
-          <SectionHeading
-            eyebrow="Beyond Academics"
-            title="Learn Beyond the Classroom."
-            description="Communication, confidence, and life skills — built through the same 1-to-1 approach."
-            tone="white"
-          />
-        </ScrollReveal>
-        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {skills.slice(0, 8).map((skill, index) => (
-            <ScrollReveal key={skill.slug} delay={(index % 4) * 60}>
-              <SkillCard skill={skill} />
-            </ScrollReveal>
-          ))}
+      <Section id="skills" tone="surface">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,300px)] lg:items-center lg:gap-16">
+          <ScrollReveal className="flex flex-col items-start gap-4">
+            <Badge tone="lime">Beyond Academics</Badge>
+            <h2 className="text-3xl font-semibold tracking-tight text-ink sm:text-4xl lg:text-[2.75rem] lg:leading-[1.1]">
+              Learn Beyond
+              <br />
+              the <span className="text-lime-ink">Classroom.</span>
+            </h2>
+            <p className="max-w-xl text-base leading-relaxed text-muted sm:text-lg">
+              Communication, confidence, and life skills — built through the same
+              1-to-1 approach, with a mentor who works on the student&apos;s real talks,
+              decisions, and habits.
+            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted">
+              {["8 skill tracks", "One mentor, one student", "Progress notes every session"].map(
+                (point) => (
+                  <span key={point} className="inline-flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-lime" aria-hidden />
+                    {point}
+                  </span>
+                )
+              )}
+            </div>
+          </ScrollReveal>
+
+          {/* Decorative doodle composition — echoes the chat / growth / checklist
+              motifs from the concept art without depending on an image asset. */}
+          <ScrollReveal
+            delay={120}
+            className="relative mx-auto hidden aspect-square w-full max-w-[300px] lg:block"
+          >
+            <div className="absolute inset-[14%] rounded-full bg-lime-soft blur-2xl" aria-hidden />
+            <div
+              className="absolute inset-[8%] rounded-full border border-dashed border-lime/40"
+              aria-hidden
+            />
+            <div
+              className="absolute inset-[24%] rounded-full border border-border bg-white"
+              aria-hidden
+            />
+            <div className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-2xl bg-ink text-lime shadow-lift">
+              <Sparkles className="h-7 w-7" strokeWidth={1.75} aria-hidden />
+            </div>
+            <div className="absolute right-[2%] top-[8%] inline-flex items-center gap-2 rounded-xl border border-border bg-white px-3 py-2 text-xs font-medium text-ink shadow-card">
+              <MessageCircle className="h-4 w-4 text-lime-deep" strokeWidth={1.75} aria-hidden />
+              Speak up
+            </div>
+            <div className="absolute bottom-[18%] left-[-4%] inline-flex items-center gap-2 rounded-xl border border-border bg-white px-3 py-2 text-xs font-medium text-ink shadow-card">
+              <TrendingUp className="h-4 w-4 text-lime-deep" strokeWidth={1.75} aria-hidden />
+              Grow steadily
+            </div>
+            <div className="absolute bottom-[2%] right-[12%] inline-flex items-center gap-2 rounded-xl border border-border bg-white px-3 py-2 text-xs font-medium text-ink shadow-card">
+              <CheckCircle2 className="h-4 w-4 text-lime-deep" strokeWidth={1.75} aria-hidden />
+              Decide well
+            </div>
+          </ScrollReveal>
         </div>
-        <div className="mt-10 flex justify-center">
-          <Button href="/one-to-one-tuition#skills" variant="primary-lime" size="lg">
+
+        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {skills.slice(0, 8).map((skill, index) => {
+            const Icon = iconMap[skill.icon];
+            return (
+              <ScrollReveal key={skill.slug} delay={(index % 4) * 60}>
+                <Link
+                  href={`/skills/${skill.slug}`}
+                  className="group flex h-full flex-col gap-4 rounded-2xl border border-border bg-white p-5 shadow-card transition-all duration-300 hover:-translate-y-1 hover:border-ink/15 hover:shadow-lift"
+                >
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink text-lime">
+                    {Icon ? <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden /> : null}
+                  </div>
+                  <div className="flex flex-1 flex-col gap-1.5">
+                    <h3 className="text-[15px] font-semibold text-ink">{skill.name}</h3>
+                    <p className="text-[13px] leading-relaxed text-muted">{skill.description}</p>
+                  </div>
+                  <span
+                    className="flex h-8 w-8 items-center justify-center self-end rounded-full border border-border-strong text-muted transition-colors duration-300 group-hover:border-ink group-hover:bg-ink group-hover:text-lime"
+                    aria-hidden
+                  >
+                    <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+                  </span>
+                </Link>
+              </ScrollReveal>
+            );
+          })}
+        </div>
+
+        <div className="mt-12 flex justify-center">
+          <Button
+            href="/one-to-one-tuition#skills"
+            variant="primary-black"
+            size="lg"
+            className="gap-3 pr-3"
+          >
             Explore Skills
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </span>
           </Button>
         </div>
       </Section>
@@ -600,6 +708,8 @@ export default function HomePage() {
             description="The parent dashboard shows session history, mentor feedback, and subject-wise progress against identified learning gaps — so you always know how learning is actually going, not just what the report card says."
             ctaLabel="Learn More"
             ctaHref="/about"
+            image={publicAsset("landing-page/parentDashboard.png")}
+            imageAlt="Parent dashboard showing session history, mentor feedback, and subject-wise progress"
             imageSide="left"
             imageLabel="Parent dashboard preview placeholder"
           />
@@ -660,6 +770,31 @@ export default function HomePage() {
           </Link>
         </div>
       </Section>
+
+      {/* From the blog */}
+      {latestPosts.length > 0 ? (
+        <Section tone="surface">
+          <ScrollReveal>
+            <SectionHeading
+              eyebrow="From the Blog"
+              title="Notes on remedial learning, done well."
+              description="Practical guidance on closing learning gaps, study habits, and personalized 1-to-1 education — for students, parents, and mentors."
+            />
+          </ScrollReveal>
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {latestPosts.map((post, index) => (
+              <ScrollReveal key={post.slug} delay={index * 80}>
+                <BlogPostCard post={post} />
+              </ScrollReveal>
+            ))}
+          </div>
+          <div className="mt-10 flex justify-center">
+            <Button href="/blog" variant="secondary-outline" size="lg">
+              Read the Blog
+            </Button>
+          </div>
+        </Section>
+      ) : null}
 
       {/* Final CTA */}
       <Section tone="ink">

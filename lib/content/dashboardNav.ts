@@ -17,6 +17,8 @@ import {
   Newspaper,
   Inbox,
   UserCog,
+  UserPlus,
+  Workflow,
   type LucideIcon,
 } from "lucide-react";
 
@@ -65,6 +67,8 @@ export const adminNav: DashboardNavItem[] = [
   // Appended, not inserted — adminBottomNav below indexes into this array
   // directly, so new entries go at the end to avoid shifting those lookups.
   { label: "Users & Roles", href: "/admin/users", icon: UserCog },
+  { label: "Teacher Leads", href: "/admin/teacher-leads", icon: UserPlus },
+  { label: "Teacher Onboarding", href: "/admin/teacher-onboarding", icon: Workflow },
 ];
 
 export const adminBottomNav: DashboardNavItem[] = [

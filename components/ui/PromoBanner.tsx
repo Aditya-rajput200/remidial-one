@@ -1,7 +1,7 @@
-import { ImageIcon } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { ImageSlot } from "@/components/ui/ImageSlot";
 
 type Tone = "surface" | "white";
 
@@ -16,18 +16,25 @@ export function PromoBanner({
   description,
   ctaLabel,
   ctaHref,
+  image,
+  imageAlt,
   imageSide = "right",
   tone = "surface",
   imageLabel = "Banner image placeholder",
+  recommendedSize,
 }: {
   eyebrow: string;
   title: string;
   description: string;
   ctaLabel: string;
   ctaHref: string;
+  /** Resolve with publicAsset() — degrades to the dashed placeholder until the file lands. */
+  image?: string;
+  imageAlt?: string;
   imageSide?: "left" | "right";
   tone?: Tone;
   imageLabel?: string;
+  recommendedSize?: string;
 }) {
   return (
     <div
@@ -52,17 +59,16 @@ export function PromoBanner({
         </div>
       </div>
 
-      <div
+      <ImageSlot
+        src={image}
+        alt={imageAlt ?? title}
+        label={imageLabel}
+        recommendedSize={recommendedSize}
         className={cn(
-          "flex aspect-[4/3] w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border-strong bg-white/60 text-center",
+          "aspect-[4/3] w-full overflow-hidden rounded-2xl",
           imageSide === "left" && "lg:order-1"
         )}
-      >
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-muted-2 shadow-card">
-          <ImageIcon className="h-5 w-5" strokeWidth={1.5} aria-hidden />
-        </div>
-        <p className="max-w-[180px] text-xs font-medium text-muted-2">{imageLabel}</p>
-      </div>
+      />
     </div>
   );
 }

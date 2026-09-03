@@ -43,14 +43,12 @@ export default function AdminMentorsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Mentors" description="All mentor accounts and their status." />
+      <PageHeader title="Mentors" description="Onboarded mentors. Applications in progress are under Teacher Onboarding." />
 
       <div className="flex flex-wrap gap-3">
         <Input placeholder="Search name or email" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-xs" />
         <Select value={status} onChange={(e) => setStatus(e.target.value)} className="max-w-xs">
-          <option value="">All statuses</option>
-          <option value="APPLICATION">Application</option>
-          <option value="UNDER_REVIEW">Under review</option>
+          <option value="">All</option>
           <option value="ACTIVE">Active</option>
           <option value="SUSPENDED">Suspended</option>
           <option value="REJECTED">Rejected</option>

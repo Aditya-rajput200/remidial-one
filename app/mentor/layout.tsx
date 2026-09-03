@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
+import { prisma } from "@/lib/db/prisma";
 import { getCurrentUser } from "@/lib/auth/session.server";
 import { toPublicUser } from "@/lib/auth/public-user";
 import type { Session } from "@/lib/auth/session";
 import { SessionProvider } from "@/lib/auth/SessionProvider";
 import { DashboardGate } from "@/components/dashboard/DashboardGate";
+import { MentorOnboardingShell } from "@/components/dashboard/MentorOnboardingShell";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -32,9 +34,22 @@ export default async function MentorLayout({ children }: { children: ReactNode }
     emailVerifiedAt: publicUser.emailVerifiedAt ? publicUser.emailVerifiedAt.toISOString() : null,
   };
 
+  // Teachers whose application hasn't been approved only get the onboarding
+  // view — the full dashboard stays locked until MentorProfile.status is
+  // ACTIVE (set by app/api/teacher-onboarding/[id]/verify on approval).
+  const mentorProfile = await prisma.mentorProfile.findUnique({
+    where: { userId: user.id },
+    select: { status: true },
+  });
+  const approved = mentorProfile?.status === "ACTIVE";
+
   return (
     <SessionProvider initialSession={initialSession}>
-      <DashboardGate role="mentor">{children}</DashboardGate>
+      {approved ? (
+        <DashboardGate role="mentor">{children}</DashboardGate>
+      ) : (
+        <MentorOnboardingShell>{children}</MentorOnboardingShell>
+      )}
     </SessionProvider>
   );
 }

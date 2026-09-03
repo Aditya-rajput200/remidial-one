@@ -33,6 +33,11 @@ enum Role {
   SUPPORT_AGENT
   FINANCE_MANAGER
   MODERATOR
+  // Handles the early lead funnel (teacher + student leads, follow-ups) and
+  // student counseling/onboarding. Deliberately does NOT see teacher
+  // documents, evaluations, or teacher assignment — see
+  // lib/auth/permissions.ts DEFAULT_ROLE_PERMISSIONS.
+  COUNSELOR
 }
 
 enum AccountStatus {
@@ -42,9 +47,15 @@ enum AccountStatus {
   DISABLED
 }
 
+// Coarse mentor lifecycle. The fine-grained onboarding pipeline (counseling /
+// demo / assessment / verification progress) is tracked by
+// TeacherOnboardingStage rows + TeacherLead.status, not by adding more
+// values here. NEEDS_CORRECTION is the "sent back for correction" state a
+// super-admin verification can put an application into.
 enum MentorApplicationStatus {
   APPLICATION
   UNDER_REVIEW
+  NEEDS_CORRECTION
   VERIFIED
   ACTIVE
   SUSPENDED
@@ -155,6 +166,18 @@ model User {
 
   counsellingRequestActivities CounsellingRequestActivity[]
   contactMessageActivities     ContactMessageActivity[]
+
+  notifications Notification[]
+
+  teacherLeadsAssigned          TeacherLead[]              @relation("TeacherLeadAssignee")
+  teacherLeadActivities         TeacherLeadActivity[]
+  onboardingStagesResponsible   TeacherOnboardingStage[]   @relation("OnboardingStageResponsible")
+  teacherDocumentsUploaded      TeacherDocument[]          @relation("TeacherDocumentUploader")
+  teacherDocumentsVerified      TeacherDocument[]          @relation("TeacherDocumentVerifier")
+  teacherCounselingsGiven       TeacherCounseling[]        @relation("TeacherCounselor")
+  teacherDemosEvaluated         TeacherDemo[]              @relation("TeacherDemoEvaluator")
+  teacherTechAssessmentsDone    TeacherTechAssessment[]    @relation("TeacherTechAssessor")
+  teacherVerificationEventsMade TeacherVerificationEvent[] @relation("TeacherVerificationActor")
 
   @@index([role])
   @@index([status])
@@ -295,10 +318,57 @@ model MentorProfile {
   createdAt       DateTime                @default(now())
   updatedAt       DateTime                @updatedAt
 
+  // --- Onboarding: teacher information form (Module 2) -----------------
+  // Contact / personal
+  phone                     String?
+  whatsapp                  String?
+  dateOfBirth               DateTime?
+  gender                    String?
+  addressLine               String?
+  city                      String?
+  state                     String?
+  pincode                   String?
+  // Professional
+  highestQualification      String?
+  degree                    String?
+  institution               String?
+  qualificationYear         Int?
+  currentOccupation         String?
+  previousExperience        String?
+  boards                    String[]  @default([])
+  employmentType            String? // FULL_TIME | PART_TIME
+  availabilityHoursPerWeek  Int?
+  // Teaching preferences
+  preferredMode             String? // ONLINE | OFFLINE | BOTH
+  preferredStudentAgeGroup  String?
+  preferredClassDurationMin Int?
+  preferredDays             String[]  @default([])
+  preferredHours            String?
+  expectedRate              Decimal?  @db.Decimal(10, 2)
+  // Technical readiness — { laptop: bool, webcam: bool, internetSpeedMbps: number, ... }
+  // Free-form so the checklist can evolve; keys defined in lib/teacher/constants.ts.
+  techSetup                 Json?
+  // Prefilled no-login application link (generated from the admin Leads page).
+  // Only the SHA-256 hash is stored; the raw token lives only in the emailed
+  // /apply/<token> URL. Regenerated on "send back for correction".
+  applicationTokenHash      String?   @unique
+  applicationTokenExpiresAt DateTime?
+  // Lifecycle timestamps
+  onboardingFormSubmittedAt DateTime?
+  onboardedAt               DateTime?
+
   subjects     Subject[]
   grades       Grade[]
   availability MentorAvailability[]
   bookings     Booking[]
+
+  lead               TeacherLead?
+  onboardingStages   TeacherOnboardingStage[]
+  documents          TeacherDocument[]
+  counselingSessions TeacherCounseling[]
+  demos              TeacherDemo[]
+  techAssessment     TeacherTechAssessment?
+  verificationEvents TeacherVerificationEvent[]
 
   @@index([status])
 }
@@ -1515,26 +1585,26 @@ enum LeadActivityOutcome {
 // haven't signed up yet. Reviewed under the support.read/support.manage
 // permissions (see lib/auth/permissions.ts), which existed unused before this.
 model CounsellingRequest {
-  id            String     @id @default(cuid())
-  parentName    String
-  studentName   String
-  relation      String
-  email         String
-  phone         String
-  classBand     String?
-  focusArea     String?
-  preferredTime String?
-  message       String?
-  status        LeadStatus @default(NEW)
-  internalNotes String?
-  contactedAt   DateTime?
+  id             String                       @id @default(cuid())
+  parentName     String
+  studentName    String
+  relation       String
+  email          String
+  phone          String
+  classBand      String?
+  focusArea      String?
+  preferredTime  String?
+  message        String?
+  status         LeadStatus                   @default(NEW)
+  internalNotes  String?
+  contactedAt    DateTime?
   // Denormalized from the latest LeadActivity's nextFollowUpAt (see
   // app/api/counselling-requests/[id]/activities) so "who's overdue" can be
   // queried/sorted without joining the activity log every time.
   nextFollowUpAt DateTime?
   activities     CounsellingRequestActivity[]
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  createdAt      DateTime                     @default(now())
+  updatedAt      DateTime                     @updatedAt
 
   @@index([status, createdAt])
   @@index([nextFollowUpAt])
@@ -1543,17 +1613,17 @@ model CounsellingRequest {
 // Public "Contact Us" form (app/(marketing)/contact) — same access model as
 // CounsellingRequest above.
 model ContactMessage {
-  id             String     @id @default(cuid())
+  id             String                   @id @default(cuid())
   name           String
   email          String
   reason         String
   message        String
-  status         LeadStatus @default(NEW)
+  status         LeadStatus               @default(NEW)
   internalNotes  String?
   nextFollowUpAt DateTime?
   activities     ContactMessageActivity[]
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
 
   @@index([status, createdAt])
   @@index([nextFollowUpAt])
@@ -1589,4 +1659,304 @@ model ContactMessageActivity {
   createdAt      DateTime            @default(now())
 
   @@index([messageId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// In-app notifications. Email is still sent separately via lib/email/send.ts;
+// this table backs the notification bell in the dashboard shells and an
+// unread count. Best-effort to write (see lib/notifications/create.ts) — a
+// failed notification never fails the action that triggered it.
+// ---------------------------------------------------------------------------
+
+enum NotificationType {
+  // Teacher onboarding
+  TEACHER_FORM_REQUIRED
+  TEACHER_DOCUMENTS_PENDING
+  TEACHER_COUNSELING_SCHEDULED
+  TEACHER_DEMO_SCHEDULED
+  TEACHER_APPLICATION_UNDER_REVIEW
+  TEACHER_APPLICATION_APPROVED
+  TEACHER_APPLICATION_REJECTED
+  TEACHER_APPLICATION_NEEDS_CORRECTION
+  TEACHER_PROFILE_COMPLETION_REQUIRED
+  // Admin / counselor
+  NEW_TEACHER_LEAD
+  TEACHER_FORM_SUBMITTED
+  TEACHER_READY_FOR_VERIFICATION
+  // Generic fallback
+  GENERAL
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  body      String?
+  linkUrl   String?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Teacher onboarding pipeline (Module 1). A TeacherLead is the pre-account
+// funnel entry (from the public "become a mentor" form or logged by a
+// counselor/admin). On conversion it spawns a real MENTOR User +
+// MentorProfile and the per-stage TeacherOnboardingStage timeline; the lead
+// row is kept and linked for funnel reporting.
+// ---------------------------------------------------------------------------
+
+enum TeacherLeadStatus {
+  NEW
+  CONTACTED
+  FORM_SENT
+  FORM_SUBMITTED
+  DOCUMENTS_PENDING
+  UNDER_REVIEW
+  COUNSELING_PENDING
+  COUNSELING_COMPLETED
+  DEMO_PENDING
+  DEMO_COMPLETED
+  ASSESSMENT_PENDING
+  ASSESSMENT_COMPLETED
+  VERIFICATION_PENDING
+  APPROVED
+  REJECTED
+  ONBOARDED
+  INACTIVE
+}
+
+model TeacherLead {
+  id                 String            @id @default(cuid())
+  name               String
+  email              String
+  phone              String
+  whatsapp           String?
+  city               String?
+  state              String?
+  source             String?
+  interestedSubjects String[]          @default([])
+  interestedGrades   String[]          @default([])
+  message            String?
+  status             TeacherLeadStatus @default(NEW)
+  assignedToId       String?
+  assignedTo         User?             @relation("TeacherLeadAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  internalNotes      String?
+  contactedAt        DateTime?
+  // Denormalized from the latest activity's nextFollowUpAt, same pattern as
+  // CounsellingRequest.nextFollowUpAt — lets "who's overdue" sort cheaply.
+  nextFollowUpAt     DateTime?
+  // Set once the lead is converted into a real applicant account.
+  mentorProfileId    String?           @unique
+  mentorProfile      MentorProfile?    @relation(fields: [mentorProfileId], references: [id], onDelete: SetNull)
+  convertedUserId    String?
+  convertedAt        DateTime?
+
+  activities TeacherLeadActivity[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([assignedToId])
+  @@index([nextFollowUpAt])
+}
+
+// One row per follow-up attempt on a TeacherLead — append-only, mirrors
+// CounsellingRequestActivity. Reuses the shared LeadActivityOutcome enum.
+model TeacherLeadActivity {
+  id             String              @id @default(cuid())
+  leadId         String
+  lead           TeacherLead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  authorId       String
+  author         User                @relation(fields: [authorId], references: [id])
+  outcome        LeadActivityOutcome
+  note           String?
+  nextFollowUpAt DateTime?
+  createdAt      DateTime            @default(now())
+
+  @@index([leadId, createdAt])
+}
+
+enum TeacherOnboardingStageKey {
+  CONTACT
+  FORM
+  DOCUMENTS
+  COUNSELING
+  DEMO
+  ASSESSMENT
+  VERIFICATION
+  APPROVAL
+  PROFILE
+  ONBOARDED
+}
+
+enum OnboardingStageState {
+  PENDING
+  CURRENT
+  COMPLETED
+  FAILED
+  SKIPPED
+}
+
+// The visual onboarding timeline (Module 1 Step 1). One row per stage per
+// applicant, seeded on conversion (see lib/teacher/onboarding.ts).
+model TeacherOnboardingStage {
+  id              String                    @id @default(cuid())
+  mentorProfileId String
+  mentorProfile   MentorProfile             @relation(fields: [mentorProfileId], references: [id], onDelete: Cascade)
+  key             TeacherOnboardingStageKey
+  state           OnboardingStageState      @default(PENDING)
+  responsibleId   String?
+  responsible     User?                     @relation("OnboardingStageResponsible", fields: [responsibleId], references: [id], onDelete: SetNull)
+  notes           String?
+  enteredAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
+
+  @@unique([mentorProfileId, key])
+  @@index([mentorProfileId])
+}
+
+enum TeacherDocumentType {
+  AADHAAR
+  PAN
+  QUALIFICATION_CERTIFICATE
+  EXPERIENCE_CERTIFICATE
+  PHOTO
+  OTHER
+}
+
+// Sensitive applicant documents. Stored in Vercel Blob but the URL is NEVER
+// returned to clients — downloads are proxied through an authorized route
+// (app/api/teacher-onboarding/[id]/documents/[docId]/download) that streams
+// the file server-side after a permission/ownership check. `blobPathname` is
+// what that route fetches; do not add the raw URL to any DTO.
+model TeacherDocument {
+  id              String              @id @default(cuid())
+  mentorProfileId String
+  mentorProfile   MentorProfile       @relation(fields: [mentorProfileId], references: [id], onDelete: Cascade)
+  type            TeacherDocumentType
+  blobPathname    String
+  fileName        String
+  fileSize        Int
+  mimeType        String
+  uploadedById    String
+  uploadedBy      User                @relation("TeacherDocumentUploader", fields: [uploadedById], references: [id])
+  verifiedAt      DateTime?
+  verifiedById    String?
+  verifiedBy      User?               @relation("TeacherDocumentVerifier", fields: [verifiedById], references: [id], onDelete: SetNull)
+  createdAt       DateTime            @default(now())
+
+  @@index([mentorProfileId])
+}
+
+enum TeacherCounselingOutcome {
+  PASS
+  HOLD
+  REQUIRES_FOLLOW_UP
+  REJECT
+}
+
+// Module 1 Step 3. Multiple rows allowed (follow-up sessions); the latest by
+// createdAt is the current one.
+model TeacherCounseling {
+  id                  String                    @id @default(cuid())
+  mentorProfileId     String
+  mentorProfile       MentorProfile             @relation(fields: [mentorProfileId], references: [id], onDelete: Cascade)
+  counselorId         String?
+  counselor           User?                     @relation("TeacherCounselor", fields: [counselorId], references: [id], onDelete: SetNull)
+  scheduledAt         DateTime?
+  mode                String?
+  notes               String?
+  teacherExpectations String?
+  subjectDiscussion   String?
+  experienceVerified  Boolean?
+  communicationNotes  String?
+  availabilityNotes   String?
+  compensationNotes   String?
+  recommendation      String?
+  outcome             TeacherCounselingOutcome?
+  completedAt         DateTime?
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+
+  @@index([mentorProfileId, createdAt])
+}
+
+enum TeacherDemoResult {
+  PASS
+  FAIL
+  REDEMO_REQUIRED
+}
+
+// Module 1 Step 4 — a scheduled demo class plus the evaluator's scorecard.
+// `ratings` is { subjectKnowledge: 1..5, conceptClarity: 1..5, ... } — the
+// category list lives in lib/teacher/onboarding.ts (DEMO_RATING_CATEGORIES).
+model TeacherDemo {
+  id                String             @id @default(cuid())
+  mentorProfileId   String
+  mentorProfile     MentorProfile      @relation(fields: [mentorProfileId], references: [id], onDelete: Cascade)
+  scheduledAt       DateTime
+  subject           String?
+  gradeLabel        String?
+  topic             String?
+  durationMinutes   Int?
+  meetingLink       String?
+  evaluatorId       String?
+  evaluator         User?              @relation("TeacherDemoEvaluator", fields: [evaluatorId], references: [id], onDelete: SetNull)
+  notes             String?
+  result            TeacherDemoResult?
+  ratings           Json?
+  evaluatorComments String?
+  evaluatedAt       DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@index([mentorProfileId])
+}
+
+// Module 1 Step 5 — technical / accessory assessment checklist. One per
+// applicant (upserted). `items` is { laptop: "AVAILABLE" | "NOT_AVAILABLE" |
+// "NEEDS_VERIFICATION", ... } keyed by TECH_ASSESSMENT_ITEMS in
+// lib/teacher/onboarding.ts.
+model TeacherTechAssessment {
+  id              String        @id @default(cuid())
+  mentorProfileId String        @unique
+  mentorProfile   MentorProfile @relation(fields: [mentorProfileId], references: [id], onDelete: Cascade)
+  items           Json
+  adminNotes      String?
+  assessedById    String?
+  assessedBy      User?         @relation("TeacherTechAssessor", fields: [assessedById], references: [id], onDelete: SetNull)
+  completedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+enum TeacherVerificationAction {
+  APPROVE
+  REJECT
+  SEND_BACK
+  REQUEST_INFO
+}
+
+// Module 1 Step 6 — append-only log of every super-admin verification
+// decision on an application. `reason` is mandatory (enforced in the route)
+// for REJECT / SEND_BACK / REQUEST_INFO.
+model TeacherVerificationEvent {
+  id              String                    @id @default(cuid())
+  mentorProfileId String
+  mentorProfile   MentorProfile             @relation(fields: [mentorProfileId], references: [id], onDelete: Cascade)
+  action          TeacherVerificationAction
+  reason          String?
+  actorId         String
+  actor           User                      @relation("TeacherVerificationActor", fields: [actorId], references: [id])
+  createdAt       DateTime                  @default(now())
+
+  @@index([mentorProfileId, createdAt])
 }

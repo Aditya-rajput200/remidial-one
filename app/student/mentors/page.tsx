@@ -53,10 +53,10 @@ export default function StudentMentorsPage() {
         <EmptyState
           icon={UserRound}
           title="No mentors yet"
-          description="Once you book your first session, your mentors will show up here."
+          description="Your advisor will assign a teacher for each subject you're enrolled in. They'll show up here once you're matched."
           action={
-            <Button href="/student/find-mentors" variant="primary-black">
-              Find a Mentor
+            <Button href="/book-counselling" variant="primary-black">
+              Talk to an advisor
             </Button>
           }
         />
