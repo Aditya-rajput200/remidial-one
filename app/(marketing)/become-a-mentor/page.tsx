@@ -5,6 +5,7 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Button } from "@/components/ui/Button";
 import { StepsList } from "@/components/ui/StepsList";
 import { FaqAccordion } from "@/components/ui/FaqAccordion";
+import { BecomeMentorApplicationForm } from "@/components/forms/BecomeMentorApplicationForm";
 import { becomeMentorFaqs } from "@/lib/content/faqs";
 import { buildMetadata } from "@/lib/seo";
 
@@ -42,9 +43,9 @@ export default function BecomeAMentorPage() {
             description="Remedial One is built around genuine 1-to-1 mentorship. If you have the qualifications, subject expertise, or teaching experience, we'd love to have you as one of our first mentors."
           />
           <div className="mt-8">
-            <Button href="/contact" variant="primary-lime" size="lg">
-            Get in touch
-          </Button>
+            <Button href="#apply" variant="primary-lime" size="lg">
+              Apply Now
+            </Button>
           </div>
         </div>
       </Section>
@@ -78,14 +79,14 @@ export default function BecomeAMentorPage() {
         </div>
       </Section>
 
-      <Section tone="ink">
-        <div className="flex flex-col items-center gap-5 text-center">
-          <h2 className="max-w-xl text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-            Ready to become one of our first mentors?
-          </h2>
-          <Button href="/contact" variant="primary-lime" size="lg">
-            Get in touch
-          </Button>
+      <Section tone="surface" id="apply">
+        <div className="grid gap-10 lg:grid-cols-[1fr_1.4fr] lg:items-start">
+          <SectionHeading
+            eyebrow="Apply Now"
+            title="Ready to become one of our first mentors?"
+            description="Tell us a bit about yourself and what you'd like to teach. Our team reviews every application and reaches out with next steps — no login required to apply."
+          />
+          <BecomeMentorApplicationForm />
         </div>
       </Section>
     </>

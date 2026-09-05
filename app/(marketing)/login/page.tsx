@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { AuthShell } from "@/components/layout/AuthShell";
 import { LoginForm } from "@/components/forms/LoginForm";
 import { buildMetadata } from "@/lib/seo";
@@ -16,7 +17,9 @@ export default function LoginPage() {
       title="Pick up your learning journey right where you left off."
       description="Log in to view your sessions, mentors, and progress."
     >
-      <LoginForm />
+      <Suspense fallback={null}>
+        <LoginForm />
+      </Suspense>
     </AuthShell>
   );
 }

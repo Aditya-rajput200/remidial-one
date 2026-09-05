@@ -5,6 +5,22 @@ import { errorResponse } from "@/lib/api/respond";
 import { recordAuditLog } from "@/lib/audit/log";
 import { updateLeadStatusSchema } from "@/lib/validation/leads";
 
+const detailInclude = {
+  activities: { orderBy: { createdAt: "desc" }, include: { author: { select: { name: true } } } },
+} as const;
+
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    await requirePermission("support.read");
+    const { id } = await params;
+    const message = await prisma.contactMessage.findUnique({ where: { id }, include: detailInclude });
+    if (!message) return NextResponse.json({ error: "Contact message not found" }, { status: 404 });
+    return NextResponse.json({ message });
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const admin = await requirePermission("support.manage");
@@ -22,6 +38,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         ...(body.status ? { status: body.status } : {}),
         ...(body.internalNotes !== undefined ? { internalNotes: body.internalNotes } : {}),
       },
+      include: detailInclude,
     });
 
     await recordAuditLog({

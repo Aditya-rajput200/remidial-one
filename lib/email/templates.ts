@@ -115,6 +115,7 @@ export function counsellingRequestConfirmationEmail(input: { parentName: string;
 export function contactMessageNotificationEmail(input: {
   name: string;
   email: string;
+  phone?: string;
   reason: string;
   message: string;
   adminUrl: string;
@@ -127,6 +128,7 @@ export function contactMessageNotificationEmail(input: {
        <table role="presentation" style="width:100%;border-collapse:collapse;margin-top:12px;">
          ${factRow("Name", input.name)}
          ${factRow("Email", input.email)}
+         ${input.phone ? factRow("Phone", input.phone) : ""}
          ${factRow("Reason", input.reason)}
          ${factRow("Message", input.message)}
        </table>
@@ -259,6 +261,21 @@ export function teacherRejectedEmail(input: { name: string; reason: string }): E
       `<p style="font-size:15px;line-height:1.5;">Hi ${escapeHtml(input.name)},</p>
        <p style="font-size:15px;line-height:1.5;">Thank you for your interest in teaching on Remedial One. After review, we're not able to move forward with your application at this time.</p>
        <p style="font-size:15px;line-height:1.5;color:#374151;">${escapeHtml(input.reason)}</p>`,
+    ),
+  };
+}
+
+// Sent when the internal CRM (see Crm/my-app) provisions a student account
+// here after a lead is enrolled — see app/api/integrations/crm/students.
+export function studentAccountReadyEmail(input: { name: string; setPasswordUrl: string }): EmailTemplate {
+  return {
+    subject: "Your Remedial One student account is ready",
+    html: layout(
+      "Set a password to access your student dashboard.",
+      `<p style="font-size:15px;line-height:1.5;">Hi ${escapeHtml(input.name)},</p>
+       <p style="font-size:15px;line-height:1.5;">Your enrollment is confirmed and your student account is ready. Set a password to sign in and see your sessions, mentor, and progress.</p>
+       ${button("Set your password", input.setPasswordUrl)}
+       <p style="margin-top:24px;font-size:12px;color:#6B7280;">This link expires in 24 hours. If it lapses, use "Forgot password" on the login page.</p>`,
     ),
   };
 }

@@ -8,9 +8,10 @@ import { notifyPermissionHolders } from "@/lib/notifications/create";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import type { TeacherLeadStatus } from "@/lib/generated/prisma/enums";
 
-// Staff-only — teacher leads are entered by a counselor/admin after first
-// contact (there is no public application form). See app/(marketing)/become-a-mentor,
-// which now just points to /contact.
+// Staff-only — for a counselor/admin entering a lead by hand (e.g. after a
+// phone call), assigned to themselves on creation. The public "Become a
+// Mentor" page posts to POST /api/teacher-leads/apply instead, which is
+// unauthenticated and rate-limited by IP.
 export async function POST(request: NextRequest) {
   try {
     const actor = await requirePermission("teacher_leads.manage");

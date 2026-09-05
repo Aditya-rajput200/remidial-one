@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Geist, Caveat } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/lib/auth/SessionProvider";
 import { JsonLd } from "@/components/ui/JsonLd";
@@ -8,6 +8,15 @@ import { SITE_NAME, SITE_TAGLINE, SITE_URL, organizationJsonLd, websiteJsonLd } 
 const geist = Geist({
   variable: "--font-geist",
   subsets: ["latin"],
+});
+
+// Handwritten accent for the hero's third headline line only — referenced
+// directly as `font-[family-name:var(--font-script)]`, not wired into the
+// shared --font-sans token, so it never touches body/UI text.
+const caveat = Caveat({
+  variable: "--font-script",
+  subsets: ["latin"],
+  weight: ["600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -22,7 +31,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${geist.variable} h-full antialiased`}>
+    <html lang="en" className={`${geist.variable} ${caveat.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-white text-ink">
         <JsonLd data={organizationJsonLd()} />
         <JsonLd data={websiteJsonLd()} />

@@ -8,19 +8,21 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 
-type Errors = Partial<Record<"name" | "email" | "message", string>>;
+type Errors = Partial<Record<"name" | "email" | "phone" | "message", string>>;
 
 export function ContactForm() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
   const [submitError, setSubmitError] = useState("");
+  const [reason, setReason] = useState("student");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const name = String(formData.get("name") ?? "").trim();
     const email = String(formData.get("email") ?? "").trim();
+    const phone = String(formData.get("phone") ?? "").trim();
     const reason = String(formData.get("reason") ?? "student");
     const message = String(formData.get("message") ?? "").trim();
     // Honeypot — see the visually-hidden field below.
@@ -29,6 +31,13 @@ export function ContactForm() {
     const nextErrors: Errors = {};
     if (!name) nextErrors.name = "Please enter your name.";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) nextErrors.email = "Enter a valid email address.";
+    // Optional — only validated when the visitor actually typed something.
+    if (phone && !/^[\d+\-()\s]{7,}$/.test(phone)) nextErrors.phone = "Enter a valid phone number.";
+    // Mentor inquiries route to the Teacher Leads pipeline, which needs a
+    // phone number to follow up — required only for that reason.
+    if (reason === "mentor" && !/^[\d+\-()\s]{7,}$/.test(phone)) {
+      nextErrors.phone = "Enter a valid phone number so we can reach you about mentoring.";
+    }
     if (!message) nextErrors.message = "Tell us a little about what you need.";
 
     setErrors(nextErrors);
@@ -40,7 +49,7 @@ export function ContactForm() {
       const res = await fetch("/api/contact-messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, reason, message, website }),
+        body: JSON.stringify({ name, email, phone, reason, message, website }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -83,8 +92,16 @@ export function ContactForm() {
         <Input id="email" name="email" type="email" placeholder="you@example.com" autoComplete="email" />
       </FormField>
 
+      <FormField
+        label={reason === "mentor" ? "Mobile number" : "Mobile number (optional)"}
+        htmlFor="phone"
+        error={errors.phone}
+      >
+        <Input id="phone" name="phone" type="tel" placeholder="+91 98765 43210" autoComplete="tel" />
+      </FormField>
+
       <FormField label="I'm reaching out as a" htmlFor="reason">
-        <Select id="reason" name="reason" defaultValue="student">
+        <Select id="reason" name="reason" defaultValue="student" onChange={(e) => setReason(e.target.value)}>
           <option value="student">Student / Parent</option>
           <option value="mentor">Prospective Mentor</option>
           <option value="other">Something else</option>

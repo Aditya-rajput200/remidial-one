@@ -65,7 +65,9 @@ export function PromoBanner({
         label={imageLabel}
         recommendedSize={recommendedSize}
         className={cn(
-          "aspect-[4/3] w-full overflow-hidden rounded-2xl",
+          "aspect-square w-full overflow-hidden rounded-2xl",
+          image &&
+            "[mask-image:radial-gradient(ellipse_65%_65%_at_center,black_70%,transparent_100%)] [-webkit-mask-image:radial-gradient(ellipse_65%_65%_at_center,black_70%,transparent_100%)]",
           imageSide === "left" && "lg:order-1"
         )}
       />

@@ -6,6 +6,7 @@ import { headerNav, moreNav } from "@/lib/content/nav";
 import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/layout/Logo";
 import { useSession } from "@/lib/auth/SessionProvider";
+import { dashboardPathForRole } from "@/lib/auth/session";
 import { cn } from "@/lib/cn";
 
 export function MobileNav({
@@ -15,8 +16,9 @@ export function MobileNav({
   open: boolean;
   onClose: () => void;
 }) {
-  const { session } = useSession();
-  const dashboardHref = session?.role === "mentor" ? "/mentor/dashboard" : "/student/dashboard";
+  const { session, ready } = useSession();
+  const showDashboard = ready && !!session;
+  const dashboardHref = session ? dashboardPathForRole(session.role) : "/login";
   return (
     <div
       className={cn(
@@ -141,7 +143,7 @@ export function MobileNav({
         </nav>
 
         <div className="mt-auto flex flex-col gap-3 pt-2">
-          {session ? (
+          {showDashboard ? (
             <Button href={dashboardHref} variant="primary-lime" size="lg" className="w-full" onClick={onClose}>
               Go to Dashboard
             </Button>

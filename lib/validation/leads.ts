@@ -21,13 +21,30 @@ export const counsellingRequestSchema = z.object({
   website: honeypot,
 });
 
-export const contactMessageSchema = z.object({
-  name: z.string().trim().min(1, "Please enter your name.").max(120),
-  email: z.string().trim().email("Enter a valid email address.").max(200),
-  reason: z.enum(["student", "mentor", "other"]).default("student"),
-  message: z.string().trim().min(1, "Tell us a little about what you need.").max(2000),
-  website: honeypot,
-});
+export const contactMessageSchema = z
+  .object({
+    name: z.string().trim().min(1, "Please enter your name.").max(120),
+    email: z.string().trim().email("Enter a valid email address.").max(200),
+    // Optional — a caller who'd rather be reached by phone than email, or who
+    // wants a quicker callback than email allows. No min length: an empty
+    // string (nothing typed) is valid; whatever length CounsellingForm allows
+    // for a phone number caps it here too.
+    phone: z.string().trim().max(30).optional().or(z.literal("")),
+    reason: z.enum(["student", "mentor", "other"]).default("student"),
+    message: z.string().trim().min(1, "Tell us a little about what you need.").max(2000),
+    website: honeypot,
+  })
+  // reason "mentor" is routed to TeacherLead (see app/api/contact-messages),
+  // whose phone field is required — so hold submitters to the same bar here.
+  .superRefine((data, ctx) => {
+    if (data.reason === "mentor" && (data.phone ?? "").trim().length < 7) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["phone"],
+        message: "Enter a valid phone number so we can reach you about mentoring.",
+      });
+    }
+  });
 
 export const updateLeadStatusSchema = z.object({
   status: z.enum(["NEW", "CONTACTED", "SCHEDULED", "CLOSED"]).optional(),

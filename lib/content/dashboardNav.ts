@@ -11,7 +11,6 @@ import {
   GraduationCap,
   Wallet,
   Settings,
-  ClipboardCheck,
   ShieldCheck,
   ListChecks,
   Newspaper,
@@ -56,7 +55,6 @@ export const mentorNav: DashboardNavItem[] = [
 
 export const adminNav: DashboardNavItem[] = [
   { label: "Overview", href: "/admin", icon: LayoutDashboard },
-  { label: "Mentor Applications", href: "/admin/mentor-applications", icon: ClipboardCheck },
   { label: "Mentors", href: "/admin/mentors", icon: GraduationCap },
   { label: "Students", href: "/admin/students", icon: UsersRound },
   { label: "Bookings", href: "/admin/bookings", icon: CalendarClock },
@@ -75,7 +73,7 @@ export const adminBottomNav: DashboardNavItem[] = [
   adminNav[0],
   adminNav[1],
   adminNav[2],
-  adminNav[4],
+  adminNav[3],
 ];
 
 // Mobile bottom nav shows a compact subset; the rest live in the drawer.

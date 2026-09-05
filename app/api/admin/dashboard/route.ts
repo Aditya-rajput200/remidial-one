@@ -13,7 +13,6 @@ export async function GET() {
     const [
       totalStudents,
       totalMentors,
-      pendingApplications,
       activeMentors,
       upcomingBookings,
       totalBookings,
@@ -22,7 +21,6 @@ export async function GET() {
     ] = await prisma.$transaction([
       prisma.user.count({ where: { role: "STUDENT" } }),
       prisma.user.count({ where: { role: "MENTOR" } }),
-      prisma.mentorProfile.count({ where: { status: { in: ["APPLICATION", "UNDER_REVIEW"] } } }),
       prisma.mentorProfile.count({ where: { status: "ACTIVE" } }),
       prisma.booking.count({
         where: { scheduledAt: { gte: now, lte: in7Days }, status: { in: ["PENDING", "CONFIRMED"] } },
@@ -35,7 +33,6 @@ export async function GET() {
     return NextResponse.json({
       totalStudents,
       totalMentors,
-      pendingApplications,
       activeMentors,
       upcomingBookings,
       totalBookings,

@@ -5,6 +5,22 @@ import { errorResponse } from "@/lib/api/respond";
 import { recordAuditLog } from "@/lib/audit/log";
 import { updateLeadStatusSchema } from "@/lib/validation/leads";
 
+const detailInclude = {
+  activities: { orderBy: { createdAt: "desc" }, include: { author: { select: { name: true } } } },
+} as const;
+
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    await requirePermission("support.read");
+    const { id } = await params;
+    const request_ = await prisma.counsellingRequest.findUnique({ where: { id }, include: detailInclude });
+    if (!request_) return NextResponse.json({ error: "Counselling request not found" }, { status: 404 });
+    return NextResponse.json({ request: request_ });
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const admin = await requirePermission("support.manage");
@@ -25,6 +41,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         // move again if an admin later flips it back and forth.
         ...(body.status === "CONTACTED" && !existing.contactedAt ? { contactedAt: new Date() } : {}),
       },
+      include: detailInclude,
     });
 
     await recordAuditLog({

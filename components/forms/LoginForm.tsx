@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Info } from "lucide-react";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
@@ -10,11 +10,31 @@ import { Button } from "@/components/ui/Button";
 import { useSession } from "@/lib/auth/SessionProvider";
 import { dashboardPathForRole } from "@/lib/auth/session";
 
+// A redirect target must be an internal path ("/foo"), never a
+// protocol-relative or absolute URL — otherwise `?redirect=` could be used
+// to send a logged-in user off-site.
+function safeRedirect(value: string | null): string | null {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return null;
+  return value;
+}
+
 export function LoginForm() {
   const router = useRouter();
-  const { login } = useSession();
+  const searchParams = useSearchParams();
+  const { login, refreshSession } = useSession();
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Landing here can mean a dashboard route just redirected us because the
+  // session had expired or been revoked server-side. The SessionProvider's
+  // client state doesn't know that yet (it's only updated by explicit
+  // login/logout calls), so without this the header would keep showing the
+  // "Dashboard" button — clicking it just bounces back here again. Re-sync
+  // against the server so the header correctly falls back to "Login".
+  useEffect(() => {
+    refreshSession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -31,7 +51,8 @@ export function LoginForm() {
       return;
     }
 
-    router.push(dashboardPathForRole(result.session.role));
+    const redirectTo = safeRedirect(searchParams.get("redirect")) ?? dashboardPathForRole(result.session.role);
+    router.push(redirectTo);
   }
 
   return (

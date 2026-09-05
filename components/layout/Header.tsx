@@ -9,6 +9,7 @@ import { Logo } from "@/components/layout/Logo";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { MegaPanel } from "@/components/layout/MegaMenu";
 import { useSession } from "@/lib/auth/SessionProvider";
+import { dashboardPathForRole } from "@/lib/auth/session";
 import { cn } from "@/lib/cn";
 
 export function Header() {
@@ -18,8 +19,9 @@ export function Header() {
   const [openMega, setOpenMega] = useState<string | null>(null);
   const moreRef = useRef<HTMLDivElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { session } = useSession();
-  const dashboardHref = session?.role === "mentor" ? "/mentor/dashboard" : "/student/dashboard";
+  const { session, ready } = useSession();
+  const showDashboard = ready && !!session;
+  const dashboardHref = session ? dashboardPathForRole(session.role) : "/login";
 
   const activeMega = headerNav.find(
     (entry): entry is Extract<typeof entry, { type: "mega" }> =>
@@ -184,7 +186,7 @@ export function Header() {
               <UserPlus className="h-4 w-4" strokeWidth={1.75} aria-hidden />
               Become a Mentor
             </Link>
-            {session ? (
+            {showDashboard ? (
               <Button
                 href={dashboardHref}
                 variant="primary-lime"

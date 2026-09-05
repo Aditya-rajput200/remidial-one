@@ -1616,6 +1616,7 @@ model ContactMessage {
   id             String                   @id @default(cuid())
   name           String
   email          String
+  phone          String?
   reason         String
   message        String
   status         LeadStatus               @default(NEW)
